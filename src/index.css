@@ -1,0 +1,81 @@
+:root {
+  --color-bg: #faf9f7;
+  --color-bg-alt: #f0ede8;
+  --color-surface: #ffffff;
+  --color-text: #141210;
+  --color-text-muted: #5a534d;
+  --color-accent: #7a1f35;
+  --color-accent-hover: #5e1729;
+  --color-gold: #8b6914;
+  --color-gold-light: #c4a035;
+  --color-border: #e2dbd3;
+  --color-success: #1e5c45;
+  --color-ink: #1a1513;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --radius: 6px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 16px rgba(20, 18, 16, 0.06);
+  --shadow-lg: 0 12px 40px rgba(20, 18, 16, 0.1);
+  --max-width: 1140px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
