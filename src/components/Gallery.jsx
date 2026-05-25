@@ -35,8 +35,9 @@ export default function Gallery() {
   return (
     <Section
       id="gallery"
-      title="Photo gallery"
-      subtitle="Documented evidence of what happened in Tigray — from international reporting the government tried to hide."
+      title="Evidence gallery"
+      subtitle="Photographs from international reporting — proof the world cannot ignore."
+      wide
     >
       <p className="gallery__warning">
         These images depict war injuries and trauma. Viewer discretion advised.

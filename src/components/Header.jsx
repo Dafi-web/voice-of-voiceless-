@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { SITE_NAME } from '../constants/brand'
+import Logo from './Logo'
 
-const NAV_LINKS = [
+const NAV = [
+  { href: '#about', label: 'About' },
   { href: '#truth', label: 'The truth' },
   { href: '#gallery', label: 'Gallery' },
   { href: '#justice', label: 'Justice' },
@@ -9,43 +10,40 @@ const NAV_LINKS = [
 ]
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const closeMenu = () => setMenuOpen(false)
+  const [open, setOpen] = useState(false)
+  const close = () => setOpen(false)
 
   return (
     <header className="header">
       <div className="header__inner">
-        <a href="#" className="header__brand" onClick={closeMenu}>
-          <span className="header__logo-name">{SITE_NAME}</span>
+        <a href="#" className="header__brand" onClick={close}>
+          <Logo size={40} />
         </a>
 
         <button
           type="button"
-          className="header__toggle"
-          aria-expanded={menuOpen}
-          aria-controls="main-nav"
-          onClick={() => setMenuOpen((open) => !open)}
+          className="header__menu-btn"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          onClick={() => setOpen((v) => !v)}
         >
           <span className="sr-only">Menu</span>
-          <span className="header__toggle-bar" />
-          <span className="header__toggle-bar" />
-          <span className="header__toggle-bar" />
+          <span className={`header__burger ${open ? 'is-open' : ''}`} />
         </button>
 
-        <nav
-          id="main-nav"
-          className={`header__nav ${menuOpen ? 'header__nav--open' : ''}`}
-          aria-label="Main"
-        >
-          <ul className="header__list">
-            {NAV_LINKS.map(({ href, label }) => (
+        <nav id="site-nav" className={`header__nav ${open ? 'is-open' : ''}`} aria-label="Main">
+          <ul className="header__links">
+            {NAV.map(({ href, label }) => (
               <li key={href}>
-                <a href={href} className="header__link" onClick={closeMenu}>
+                <a href={href} onClick={close}>
                   {label}
                 </a>
               </li>
             ))}
           </ul>
+          <a href="#contact" className="btn btn--primary btn--sm" onClick={close}>
+            Speak up
+          </a>
         </nav>
       </div>
     </header>
