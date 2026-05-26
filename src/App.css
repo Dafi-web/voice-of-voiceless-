@@ -220,7 +220,20 @@
 
   .header__menu-btn {
     display: block;
-    z-index: 201;
+    z-index: 202;
+    position: relative;
+  }
+
+  .header__backdrop {
+    position: fixed;
+    inset: 0;
+    top: var(--header-h);
+    z-index: 200;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.55);
   }
 
   .header__nav {
@@ -229,17 +242,19 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 200;
+    z-index: 201;
     flex-direction: column;
     align-items: stretch;
-    gap: 1.5rem;
-    padding: 2rem 1.5rem;
-    background: #ffffff;
-    box-shadow: -8px 0 32px rgba(12, 15, 20, 0.15);
+    gap: 1.25rem;
+    padding: 1.5rem 1.5rem 2rem;
+    background: #1a1f28;
+    color: #ffffff;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
     transform: translateX(100%);
     transition: transform 0.25s ease;
     pointer-events: none;
     visibility: hidden;
+    overflow-y: auto;
   }
 
   .header__nav.is-open {
@@ -254,35 +269,54 @@
   }
 
   .header__links li {
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .header__links a {
     display: block;
-    padding: 1rem 0;
-    font-size: 1.15rem;
+    padding: 1.1rem 0;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff;
+    text-decoration: none;
   }
 
   .header__links a:hover,
-  .header__links a:focus {
-    color: var(--color-accent) !important;
+  .header__links a:focus,
+  .header__links a:active {
+    color: #f0c674 !important;
+    -webkit-text-fill-color: #f0c674;
   }
 
-  .header__nav .btn--primary {
+  .header__nav .header__cta {
     width: 100%;
     text-align: center;
-    margin-top: 0.5rem;
+    margin-top: auto;
+    background: #9b1c31;
+    color: #ffffff !important;
+    border-color: #9b1c31;
+    font-size: 1rem;
+    padding: 0.9rem 1.5rem;
   }
 
-  /* Logo text readable on mobile header */
+  .header__nav .header__cta:hover {
+    background: #7a1526;
+    color: #ffffff !important;
+  }
+
   .header__brand .logo__name {
-    color: var(--color-text);
+    color: #12151a;
   }
 
   .header__brand .logo__sub {
-    color: var(--color-accent);
+    color: #9b1c31;
+  }
+
+  .header__burger,
+  .header__burger::before,
+  .header__burger::after {
+    background: #12151a;
   }
 }
 

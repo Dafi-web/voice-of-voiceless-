@@ -38,7 +38,21 @@ export default function Header() {
           <span className={`header__burger ${open ? 'is-open' : ''}`} />
         </button>
 
-        <nav id="site-nav" className={`header__nav ${open ? 'is-open' : ''}`} aria-label="Main">
+        {open && (
+          <button
+            type="button"
+            className="header__backdrop"
+            aria-label="Close menu"
+            onClick={close}
+          />
+        )}
+
+        <nav
+          id="site-nav"
+          className={`header__nav ${open ? 'is-open' : ''}`}
+          aria-label="Main"
+          aria-hidden={!open}
+        >
           <ul className="header__links">
             {NAV.map(({ href, label }) => (
               <li key={href}>
@@ -48,7 +62,7 @@ export default function Header() {
               </li>
             ))}
           </ul>
-          <a href="#contact" className="btn btn--primary btn--sm" onClick={close}>
+          <a href="#contact" className="btn btn--primary btn--sm header__cta" onClick={close}>
             Speak up
           </a>
         </nav>
