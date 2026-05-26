@@ -5,6 +5,7 @@ export const SITE_EMAIL = 'contact@voiceofvoiceless.org'
 export const SITE_YEAR = 2026
 
 export const SITE_OWNER_NAME = 'Rahwa'
+export const FOUNDER_PHOTO = '/founder/rahwa.jpg'
 
 export const FOUNDER_GOALS = [
   'Expose the truth that governments hid about the Tigray genocide',

@@ -1,5 +1,11 @@
 import Section from './Section'
-import { SITE_OWNER_NAME, SITE_YEAR, FOUNDER_GOALS, SITE_OWNER_NOTE } from '../constants/brand'
+import {
+  SITE_OWNER_NAME,
+  SITE_YEAR,
+  FOUNDER_GOALS,
+  SITE_OWNER_NOTE,
+  FOUNDER_PHOTO,
+} from '../constants/brand'
 
 const CARDS = [
   {
@@ -33,8 +39,24 @@ export default function About() {
       </p>
 
       <aside className="founder-card">
-        <p className="founder-card__label">Founder · {SITE_OWNER_NAME} · {SITE_YEAR}</p>
+        <div className="founder-card__profile">
+          <img
+            src={FOUNDER_PHOTO}
+            alt={`${SITE_OWNER_NAME}, founder of Voice of the Voiceless`}
+            className="founder-card__photo"
+            width={200}
+            height={250}
+            loading="lazy"
+          />
+          <div className="founder-card__info">
+            <p className="founder-card__label">Founder · {SITE_YEAR}</p>
+            <h3 className="founder-card__name">{SITE_OWNER_NAME}</h3>
+            <p className="founder-card__role">Owner & founder · Voice of the Voiceless</p>
+          </div>
+        </div>
+
         <p className="founder-card__text">{SITE_OWNER_NOTE}</p>
+
         <ul className="founder-card__goals">
           {FOUNDER_GOALS.map((goal) => (
             <li key={goal}>{goal}</li>
