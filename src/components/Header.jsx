@@ -34,39 +34,52 @@ export default function Header() {
           aria-controls="site-nav"
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="sr-only">Menu</span>
+          <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
           <span className={`header__burger ${open ? 'is-open' : ''}`} />
         </button>
 
-        {open && (
-          <button
-            type="button"
-            className="header__backdrop"
-            aria-label="Close menu"
-            onClick={close}
-          />
-        )}
-
-        <nav
-          id="site-nav"
-          className={`header__nav ${open ? 'is-open' : ''}`}
-          aria-label="Main"
-          aria-hidden={!open}
-        >
+        <nav className="header__nav header__nav--desktop" aria-label="Main desktop">
           <ul className="header__links">
             {NAV.map(({ href, label }) => (
               <li key={href}>
-                <a href={href} onClick={close}>
-                  {label}
-                </a>
+                <a href={href}>{label}</a>
               </li>
             ))}
           </ul>
-          <a href="#contact" className="btn btn--primary btn--sm header__cta" onClick={close}>
+          <a href="#contact" className="btn btn--primary btn--sm">
             Speak up
           </a>
         </nav>
       </div>
+
+      {open && (
+        <button
+          type="button"
+          className="header__backdrop"
+          aria-label="Close menu"
+          onClick={close}
+        />
+      )}
+
+      <nav
+        id="site-nav"
+        className={`header__nav header__nav--mobile ${open ? 'is-open' : ''}`}
+        aria-label="Main mobile"
+        aria-hidden={!open}
+      >
+        <ul className="header__links">
+          {NAV.map(({ href, label }) => (
+            <li key={href}>
+              <a href={href} onClick={close}>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a href="#contact" className="btn btn--primary header__cta" onClick={close}>
+          Speak up
+        </a>
+      </nav>
     </header>
   )
 }
