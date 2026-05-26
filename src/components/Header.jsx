@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Logo from './Logo'
 
 const NAV = [
@@ -12,6 +12,13 @@ const NAV = [
 export default function Header() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
+
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
 
   return (
     <header className="header">
