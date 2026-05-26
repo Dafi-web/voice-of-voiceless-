@@ -1,5 +1,5 @@
 import Section from './Section'
-import { SITE_OWNER_NOTE, SITE_OWNER_NAME, SITE_YEAR } from '../constants/brand'
+import { SITE_OWNER_NAME, SITE_YEAR, FOUNDER_GOALS, SITE_OWNER_NOTE } from '../constants/brand'
 
 const CARDS = [
   {
@@ -28,22 +28,18 @@ export default function About() {
     >
       <p className="prose prose--lead">
         This is not propaganda. It is documentation. We stand with women, girls, and
-        families who suffered wartime sexual violence and atrocities — and we refuse to
-        let their stories disappear.
+        families who suffered genocide, mass killing, and wartime sexual violence — and we
+        refuse to let their stories disappear.
       </p>
 
       <aside className="founder-card">
-        <p className="founder-card__label">Site owner · {SITE_YEAR}</p>
-        <p className="founder-card__text">
-          {SITE_OWNER_NAME ? (
-            <>
-              <strong>{SITE_OWNER_NAME}</strong> owns and leads Voice of the Voiceless — established
-              in {SITE_YEAR} to expose the truth about Tigray and demand justice for survivors.
-            </>
-          ) : (
-            SITE_OWNER_NOTE
-          )}
-        </p>
+        <p className="founder-card__label">Founder · {SITE_OWNER_NAME} · {SITE_YEAR}</p>
+        <p className="founder-card__text">{SITE_OWNER_NOTE}</p>
+        <ul className="founder-card__goals">
+          {FOUNDER_GOALS.map((goal) => (
+            <li key={goal}>{goal}</li>
+          ))}
+        </ul>
       </aside>
 
       <ul className="cards">

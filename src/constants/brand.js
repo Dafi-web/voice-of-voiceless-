@@ -2,10 +2,16 @@ export const SITE_NAME = 'Voice of the Voiceless'
 export const SITE_SHORT = 'VoV'
 export const SITE_TAGLINE = 'Truth for Tigray. Justice for survivors.'
 export const SITE_EMAIL = 'contact@voiceofvoiceless.org'
-export const SITE_YEAR = 2024
+export const SITE_YEAR = 2026
 
-/** Set her name here when you want it shown on the site */
-export const SITE_OWNER_NAME = ''
+export const SITE_OWNER_NAME = 'Rahwa'
+
+export const FOUNDER_GOALS = [
+  'Expose the truth that governments hid about the Tigray genocide',
+  'Document sexual violence used as a weapon of war against women and girls',
+  'Give survivors a voice when officials deny and silence them',
+  'Preserve evidence so perpetrators can one day face justice',
+]
 
 export const SITE_OWNER_NOTE =
-  'This website was established in 2024. It is owned by a woman who leads this project — standing with survivors of the Tigray war and fighting for justice.'
+  'Rahwa founded Voice of the Voiceless because the world was not told the full truth about Tigray — and survivors of genocide and sexual violence deserve to be heard.'

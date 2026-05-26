@@ -24,9 +24,10 @@ export default function Hero() {
         </h1>
 
         <p className="hero__lead">
-          Women and girls were raped. Civilians were killed and displaced. The government
-          hid the scale of the war. We exist to speak for those who were silenced — and
-          to fight for justice.
+          A genocide was carried out in Tigray. Women and girls were raped and sexually
+          tortured as weapons of war. The government hid the truth.{' '}
+          <strong>Rahwa</strong> built this site so the world cannot look away — and
+          justice can follow.
         </p>
 
         <div className="hero__actions">

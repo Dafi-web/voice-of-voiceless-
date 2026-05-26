@@ -2,10 +2,6 @@ import Logo from './Logo'
 import { SITE_TAGLINE, SITE_YEAR, SITE_OWNER_NAME } from '../constants/brand'
 
 export default function Footer() {
-  const ownerLine = SITE_OWNER_NAME
-    ? `Owned by ${SITE_OWNER_NAME}`
-    : 'Owned and led by the founder'
-
   return (
     <footer className="footer">
       <div className="footer__inner">
@@ -19,9 +15,11 @@ export default function Footer() {
           <a href="#contact">Contact</a>
         </nav>
         <p className="footer__copy">
-          © {SITE_YEAR} {ownerLine} · Voice of the Voiceless
+          © {SITE_YEAR} · Founded by {SITE_OWNER_NAME} · Voice of the Voiceless
         </p>
-        <p className="footer__year">Website established {SITE_YEAR}</p>
+        <p className="footer__year">
+          Exposing genocide and sexual violence hidden by governments · {SITE_YEAR}
+        </p>
       </div>
     </footer>
   )

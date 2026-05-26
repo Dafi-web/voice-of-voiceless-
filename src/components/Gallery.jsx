@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import Section from './Section'
 import GalleryImage from './GalleryImage'
+import ImageComments from './ImageComments'
 import { GALLERY_ITEMS } from '../data/gallery'
+import { getCommentCount } from '../hooks/useImageComments'
 
 export default function Gallery() {
   const [active, setActive] = useState(null)
+  const [, setTick] = useState(0)
+
+  const refreshCounts = () => setTick((n) => n + 1)
 
   const close = () => setActive(null)
   const showPrev = () =>
@@ -36,7 +41,7 @@ export default function Gallery() {
     <Section
       id="gallery"
       title="Evidence gallery"
-      subtitle="Photographs from international reporting — proof the world cannot ignore."
+      subtitle="Photographs from international reporting — proof the world cannot ignore. Leave a comment on any image."
       wide
     >
       <p className="gallery__warning">
@@ -44,39 +49,46 @@ export default function Gallery() {
       </p>
 
       <ul className="gallery__grid">
-        {GALLERY_ITEMS.map((entry, index) => (
-          <li key={entry.id} className="gallery__item">
-            <button
-              type="button"
-              className="gallery__thumb"
-              onClick={() => setActive(index)}
-              aria-label={`View image: ${entry.caption}`}
-            >
-              <GalleryImage
-                src={entry.src}
-                fallback={entry.fallback}
-                alt={entry.caption}
-              />
-              {entry.isArticle && (
-                <span className="gallery__badge">Read report</span>
-              )}
-            </button>
-            <figcaption className="gallery__caption">
-              <p>{entry.caption}</p>
-              <cite>
-                {entry.credit}
-                {entry.link && (
-                  <>
-                    {' · '}
-                    <a href={entry.link} target="_blank" rel="noopener noreferrer">
-                      Source
-                    </a>
-                  </>
+        {GALLERY_ITEMS.map((entry, index) => {
+          const count = getCommentCount(entry.id)
+          return (
+            <li key={entry.id} className="gallery__item">
+              <button
+                type="button"
+                className="gallery__thumb"
+                onClick={() => setActive(index)}
+                aria-label={`View image: ${entry.caption}`}
+              >
+                <GalleryImage
+                  src={entry.src}
+                  fallback={entry.fallback}
+                  alt={entry.caption}
+                />
+                {entry.isArticle && (
+                  <span className="gallery__badge">Read report</span>
                 )}
-              </cite>
-            </figcaption>
-          </li>
-        ))}
+                {count > 0 && (
+                  <span className="gallery__comment-count">{count} comments</span>
+                )}
+              </button>
+              <figcaption className="gallery__caption">
+                <p>{entry.caption}</p>
+                <cite>
+                  {entry.credit}
+                  {entry.link && (
+                    <>
+                      {' · '}
+                      <a href={entry.link} target="_blank" rel="noopener noreferrer">
+                        Source
+                      </a>
+                    </>
+                  )}
+                </cite>
+              </figcaption>
+              <ImageComments imageId={entry.id} compact onPosted={refreshCounts} />
+            </li>
+          )
+        })}
       </ul>
 
       {item && (
@@ -87,36 +99,39 @@ export default function Gallery() {
           aria-label="Image viewer"
           onClick={close}
         >
-          <div className="lightbox__inner" onClick={(e) => e.stopPropagation()}>
+          <div className="lightbox__inner lightbox__inner--with-comments" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="lightbox__close" onClick={close} aria-label="Close">
               ×
             </button>
             <button type="button" className="lightbox__nav lightbox__nav--prev" onClick={showPrev} aria-label="Previous">
               ‹
             </button>
-            <GalleryImage
-              src={item.src}
-              fallback={item.fallback}
-              alt={item.caption}
-              onClick={() => {}}
-            />
+            <div className="lightbox__media">
+              <GalleryImage
+                src={item.src}
+                fallback={item.fallback}
+                alt={item.caption}
+                onClick={() => {}}
+              />
+              <div className="lightbox__meta">
+                <p>{item.caption}</p>
+                <cite>{item.credit}</cite>
+                {item.link && (
+                  <a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lightbox__link"
+                  >
+                    {item.isArticle ? 'Read full New York Times report →' : 'View source →'}
+                  </a>
+                )}
+              </div>
+              <ImageComments imageId={item.id} onPosted={refreshCounts} />
+            </div>
             <button type="button" className="lightbox__nav lightbox__nav--next" onClick={showNext} aria-label="Next">
               ›
             </button>
-            <div className="lightbox__meta">
-              <p>{item.caption}</p>
-              <cite>{item.credit}</cite>
-              {item.link && (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="lightbox__link"
-                >
-                  {item.isArticle ? 'Read full New York Times report →' : 'View source →'}
-                </a>
-              )}
-            </div>
           </div>
         </div>
       )}
