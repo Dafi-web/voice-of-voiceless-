@@ -1,10 +1,15 @@
 import Logo from './Logo'
-import { SITE_TAGLINE } from '../constants/brand'
+import {
+  SITE_NAME,
+  SITE_TAGLINE,
+  MISSION_INTRO,
+  SITE_OWNER_SHORT,
+} from '../constants/brand'
 
 const PILLARS = [
-  { label: 'Expose the truth', href: '#truth' },
-  { label: 'Document evidence', href: '#gallery' },
-  { label: 'Demand justice', href: '#justice' },
+  { label: 'Our mission', href: '#about' },
+  { label: 'The truth', href: '#truth' },
+  { label: 'Gallery', href: '#gallery' },
 ]
 
 export default function Hero() {
@@ -19,15 +24,15 @@ export default function Hero() {
         <p className="hero__eyebrow">{SITE_TAGLINE}</p>
 
         <h1 id="hero-heading" className="hero__title">
-          The world must know what happened in{' '}
-          <span className="hero__highlight">Tigray</span>
+          <span className="hero__highlight">{SITE_NAME}</span>
         </h1>
 
-        <p className="hero__lead">
-          A genocide was carried out in Tigray. Women and girls were raped and sexually
-          tortured as weapons of war. The government hid the truth.{' '}
-          <strong>Rahwa</strong> built this site so the world cannot look away — and
-          justice can follow.
+        <p className="hero__lead">{MISSION_INTRO}</p>
+
+        <p className="hero__lead hero__lead--secondary">
+          In Tigray, Ethiopia, genocide and sexual violence were hidden from the world.{' '}
+          <strong>{SITE_OWNER_SHORT}</strong> built this platform so those stories are
+          heard — and justice can follow.
         </p>
 
         <div className="hero__actions">

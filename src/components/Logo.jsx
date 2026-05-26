@@ -1,3 +1,5 @@
+import { SITE_NAME, SITE_TAGLINE } from '../constants/brand'
+
 export default function Logo({ size = 48, showText = true, className = '' }) {
   return (
     <span className={`logo ${className}`}>
@@ -12,7 +14,6 @@ export default function Logo({ size = 48, showText = true, className = '' }) {
       >
         <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="2" opacity="0.2" />
         <circle cx="32" cy="32" r="24" fill="currentColor" opacity="0.08" />
-        {/* Scales of justice */}
         <path
           d="M32 14v36M20 22h24"
           stroke="currentColor"
@@ -25,7 +26,6 @@ export default function Logo({ size = 48, showText = true, className = '' }) {
           strokeWidth="2"
           strokeLinejoin="round"
         />
-        {/* Flame of truth */}
         <path
           d="M32 10c-2 4-6 5-6 9a6 6 0 0012 0c0-4-4-5-6-9z"
           fill="var(--color-gold)"
@@ -36,7 +36,7 @@ export default function Logo({ size = 48, showText = true, className = '' }) {
       </svg>
       {showText && (
         <span className="logo__text">
-          <span className="logo__name">Voice of the Voiceless</span>
+          <span className="logo__name">{SITE_NAME}</span>
           <span className="logo__sub">Tigray · Justice</span>
         </span>
       )}

@@ -1,5 +1,5 @@
 import Logo from './Logo'
-import { SITE_TAGLINE, SITE_YEAR, SITE_OWNER_NAME } from '../constants/brand'
+import { SITE_TAGLINE, SITE_DATE, SITE_OWNER_NAME, SITE_NAME } from '../constants/brand'
 
 export default function Footer() {
   return (
@@ -15,10 +15,10 @@ export default function Footer() {
           <a href="#contact">Contact</a>
         </nav>
         <p className="footer__copy">
-          © {SITE_YEAR} · Founded by {SITE_OWNER_NAME} · Voice of the Voiceless
+          © {SITE_DATE} · {SITE_OWNER_NAME} · {SITE_NAME}
         </p>
         <p className="footer__year">
-          Exposing genocide and sexual violence hidden by governments · {SITE_YEAR}
+          Transforming silence into awareness, empathy, and action
         </p>
       </div>
     </footer>

@@ -1,27 +1,32 @@
 import Section from './Section'
 import {
+  SITE_NAME,
   SITE_OWNER_NAME,
-  SITE_YEAR,
+  SITE_DATE,
   FOUNDER_GOALS,
   SITE_OWNER_NOTE,
   FOUNDER_PHOTO,
+  MISSION_INTRO,
+  MISSION_BELIEF,
+  MISSION_WORK,
+  MISSION_TIGRAY,
 } from '../constants/brand'
 
 const CARDS = [
   {
     icon: '◆',
-    title: 'Expose',
-    text: 'Report what the government and media blackout tried to bury — so the world cannot look away.',
+    title: 'Stories unheard',
+    text: 'We platform narratives that are ignored, hidden, or denied — starting with survivors in Tigray.',
   },
   {
     icon: '◇',
-    title: 'Document',
-    text: 'Preserve photos, testimony, and records from Tigray as evidence for history and law.',
+    title: 'Visuals & evidence',
+    text: 'Through photographs, testimony, and documentation, silence becomes a visible record.',
   },
   {
     icon: '◎',
-    title: 'Justice',
-    text: 'Push for accountability — in courts, tribunals, and before the international community.',
+    title: 'Awareness & action',
+    text: 'We turn empathy into demand for truth, accountability, and justice under international law.',
   },
 ]
 
@@ -29,29 +34,30 @@ export default function About() {
   return (
     <Section
       id="about"
-      title="Who we are"
-      subtitle="Voice of the Voiceless speaks for survivors of the Tigray war when power tries to silence them."
+      title="Our mission"
+      subtitle={`${SITE_NAME} — founded ${SITE_DATE} by ${SITE_OWNER_NAME}.`}
     >
-      <p className="prose prose--lead">
-        This is not propaganda. It is documentation. We stand with women, girls, and
-        families who suffered genocide, mass killing, and wartime sexual violence — and we
-        refuse to let their stories disappear.
-      </p>
+      <div className="mission-block">
+        <p className="prose prose--lead">{MISSION_INTRO}</p>
+        <p className="prose">{MISSION_BELIEF}</p>
+        <p className="prose">{MISSION_WORK}</p>
+        <p className="prose prose--emphasis">{MISSION_TIGRAY}</p>
+      </div>
 
       <aside className="founder-card">
         <div className="founder-card__profile">
           <img
             src={FOUNDER_PHOTO}
-            alt={`${SITE_OWNER_NAME}, founder of Voice of the Voiceless`}
+            alt={`${SITE_OWNER_NAME}, founder of ${SITE_NAME}`}
             className="founder-card__photo"
             width={200}
             height={250}
             loading="lazy"
           />
           <div className="founder-card__info">
-            <p className="founder-card__label">Founder · {SITE_YEAR}</p>
+            <p className="founder-card__label">Founder · {SITE_DATE}</p>
             <h3 className="founder-card__name">{SITE_OWNER_NAME}</h3>
-            <p className="founder-card__role">Owner & founder · Voice of the Voiceless</p>
+            <p className="founder-card__role">Founder · {SITE_NAME}</p>
           </div>
         </div>
 
