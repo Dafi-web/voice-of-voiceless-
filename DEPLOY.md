@@ -24,6 +24,8 @@ voice/
 | **Build command** | `npm install --prefix frontend && npm install --prefix backend && npm run build --prefix frontend` |
 | **Start command** | `npm run start --prefix backend` |
 
+> **Do not use** Render’s default `yarn install; yarn build` — it skips `frontend/node_modules` and fails with `vite: not found`. Paste the build command above manually under **Settings → Build & Deploy**.
+
 ### Environment variables
 
 | Key | Value |
