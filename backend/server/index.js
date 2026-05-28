@@ -1,12 +1,13 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
-import { initStore } from './store/index.js'
-import { seedGalleryIfEmpty } from './seed.js'
-import app from './app.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
+
+const { initStore } = await import('./store/index.js')
+const { seedGalleryIfEmpty } = await import('./seed.js')
+const { default: app } = await import('./app.js')
 
 const PORT = process.env.PORT || 3001
 

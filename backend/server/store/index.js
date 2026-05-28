@@ -1,13 +1,17 @@
 import * as sqlite from './store-sqlite.js'
 import * as mongo from './store-mongo.js'
 
-const useMongo = Boolean(process.env.MONGODB_URI?.trim())
-const impl = useMongo ? mongo : sqlite
+function useMongo() {
+  return Boolean(process.env.MONGODB_URI?.trim())
+}
 
-export const storeBackend = impl.name
+let impl = sqlite
+export let storeBackend = sqlite.name
 
 export async function initStore() {
-  if (useMongo) await mongo.init()
+  impl = useMongo() ? mongo : sqlite
+  storeBackend = impl.name
+  if (useMongo()) await mongo.init()
   else await sqlite.init()
   console.log(`Database: ${impl.name}`)
 }
