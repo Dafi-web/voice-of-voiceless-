@@ -18,6 +18,10 @@ export function mediaUrl(src) {
   if (!src) return ''
   if (/^https?:\/\//i.test(src)) return src
   const path = src.startsWith('/') ? src : `/${src}`
+  // Bundled images in frontend/public/gallery — served by Vercel/static host, not Render
+  if (path.startsWith('/gallery/') || path.startsWith('/founder/')) return path
+  // User uploads from admin are stored on the API server
+  if (path.startsWith('/uploads/') && API_BASE) return `${API_BASE}${path}`
   return API_BASE ? `${API_BASE}${path}` : path
 }
 

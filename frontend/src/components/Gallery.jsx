@@ -9,10 +9,19 @@ export default function Gallery() {
   const [items, setItems] = useState(FALLBACK)
   const [active, setActive] = useState(null)
   const loadGallery = () => {
+    const fallbackById = Object.fromEntries(FALLBACK.map((item) => [item.id, item.fallback]))
+
     api
       .getGallery()
       .then((data) => {
-        if (data?.length) setItems(data)
+        if (data?.length) {
+          setItems(
+            data.map((item) => ({
+              ...item,
+              fallback: item.fallback || fallbackById[item.id],
+            })),
+          )
+        }
       })
       .catch(() => setItems(FALLBACK))
   }
