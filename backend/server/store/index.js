@@ -7,13 +7,34 @@ function useMongo() {
 
 let impl = sqlite
 export let storeBackend = sqlite.name
+export let mongoConfigured = false
+export let mongoError = null
 
 export async function initStore() {
-  impl = useMongo() ? mongo : sqlite
-  storeBackend = impl.name
-  if (useMongo()) await mongo.init()
-  else await sqlite.init()
-  console.log(`Database: ${impl.name}`)
+  mongoConfigured = useMongo()
+  mongoError = null
+
+  if (mongoConfigured) {
+    try {
+      await mongo.init()
+      impl = mongo
+      storeBackend = mongo.name
+      console.log(`Database: ${impl.name}`)
+      return
+    } catch (err) {
+      mongoError = err.message
+      console.error('MongoDB connection failed:', err.message)
+      console.error(
+        'Check: (1) password @ encoded as %40, (2) Atlas Network Access allows 0.0.0.0/0, (3) user/password correct.',
+      )
+      console.error('Starting with SQLite fallback so the site stays online.')
+    }
+  }
+
+  impl = sqlite
+  storeBackend = sqlite.name
+  await sqlite.init()
+  console.log(`Database: ${impl.name}${mongoConfigured ? ' (MongoDB fallback)' : ''}`)
 }
 
 async function call(fn, ...args) {

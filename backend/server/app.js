@@ -7,7 +7,7 @@ import fs from 'fs'
 import { uploadsDir, isServerless, ensureDirs, frontendDist } from './paths.js'
 import { randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
-import { store, storeBackend } from './store/index.js'
+import { store, storeBackend, mongoConfigured, mongoError } from './store/index.js'
 
 ensureDirs()
 
@@ -52,7 +52,14 @@ function rowToGallery(row) {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'beyond-silence-api', database: storeBackend })
+  res.json({
+    ok: true,
+    service: 'beyond-silence-api',
+    database: storeBackend,
+    mongoConfigured,
+    mongoConnected: storeBackend === 'mongodb',
+    mongoError: mongoError || undefined,
+  })
 })
 
 app.post('/api/auth/login', async (req, res) => {

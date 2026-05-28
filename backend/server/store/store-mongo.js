@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb'
+import { checkMongoUri, withDatabase } from './mongo-uri.js'
 
 export const name = 'mongodb'
 
@@ -11,10 +12,17 @@ function col(name) {
 }
 
 export async function init() {
-  const uri = process.env.MONGODB_URI
-  if (!uri) throw new Error('MONGODB_URI is required for MongoDB store')
+  const raw = process.env.MONGODB_URI?.trim()
+  if (!raw) throw new Error('MONGODB_URI is required for MongoDB store')
 
-  client = new MongoClient(uri)
+  checkMongoUri(raw)
+  const uri = withDatabase(raw)
+
+  client = new MongoClient(uri, {
+    family: 4,
+    serverSelectionTimeoutMS: 20000,
+    connectTimeoutMS: 20000,
+  })
   await client.connect()
   db = client.db()
 
