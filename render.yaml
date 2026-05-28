@@ -6,7 +6,8 @@ services:
     name: beyond-silence
     runtime: node
     plan: free
-    buildCommand: npm install --prefix frontend && npm install --prefix backend && npm run build --prefix frontend
+    # `postinstall` installs frontend/backend deps; on Render it also runs vite build.
+    buildCommand: npm install
     startCommand: npm run start --prefix backend
     healthCheckPath: /api/health
     envVars:

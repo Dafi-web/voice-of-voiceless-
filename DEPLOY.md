@@ -21,10 +21,12 @@ voice/
 | Setting | Value |
 |---------|--------|
 | **Root directory** | *(leave empty — use repo root)* |
-| **Build command** | `npm install --prefix frontend && npm install --prefix backend && npm run build --prefix frontend` |
-| **Start command** | `npm run start --prefix backend` |
+| **Build command** | `npm install` |
+| **Start command** | `npm run start` (or `npm run start --prefix backend`) |
 
-> **Do not use** Render’s default `yarn install; yarn build` — it skips `frontend/node_modules` and fails with `vite: not found`. Paste the build command above manually under **Settings → Build & Deploy**.
+Root **`postinstall`** installs `frontend/` and `backend/` dependencies and, on Render (`RENDER=true`), runs the Vite production build. Using only `npm install` as the build command is enough — you do not need a separate `npm run build` at the repo root.
+
+> If the service was created before `postinstall` existed, set **Build command** to `npm install` under **Settings → Build & Deploy** (not `yarn install` / `yarn build`).
 
 ### Environment variables
 
