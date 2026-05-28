@@ -125,11 +125,13 @@ export const api = {
   getCommentsAll: () => request('/api/admin/comments').then(asArray),
   patchComment: (id, status) =>
     request(`/api/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteComment: (id) => request(`/api/comments/${id}`, { method: 'DELETE' }),
 
   postMessage: (body) => request('/api/messages', { method: 'POST', body: JSON.stringify(body) }),
   getMessages: () => request('/api/admin/messages').then(asArray),
   patchMessage: (id, status) =>
     request(`/api/messages/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteMessage: (id) => request(`/api/messages/${id}`, { method: 'DELETE' }),
 
   getStats: () => request('/api/admin/stats'),
 }

@@ -217,6 +217,12 @@ app.patch('/api/comments/:id', authMiddleware, (req, res) => {
   res.json({ ok: true })
 })
 
+app.delete('/api/comments/:id', authMiddleware, (req, res) => {
+  const result = db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id)
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' })
+  res.json({ ok: true })
+})
+
 app.post('/api/messages', (req, res) => {
   const { name, email, subject, body, type } = req.body
   if (!name?.trim() || !subject?.trim() || !body?.trim()) {
@@ -254,6 +260,12 @@ app.patch('/api/messages/:id', authMiddleware, (req, res) => {
     return res.status(400).json({ error: 'Invalid status' })
   }
   db.prepare('UPDATE messages SET status = ? WHERE id = ?').run(status, req.params.id)
+  res.json({ ok: true })
+})
+
+app.delete('/api/messages/:id', authMiddleware, (req, res) => {
+  const result = db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id)
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 

@@ -342,6 +342,13 @@ function AdminComments({ comments, onRefresh, onNotice }) {
     await onRefresh()
   }
 
+  const remove = async (id) => {
+    if (!confirm('Delete this comment permanently?')) return
+    await api.deleteComment(id)
+    onNotice('Comment deleted')
+    await onRefresh()
+  }
+
   return (
     <div className="admin-panel">
       <h2>User comments ({list.length})</h2>
@@ -358,16 +365,31 @@ function AdminComments({ comments, onRefresh, onNotice }) {
               <p className="admin-card__meta">On: {c.gallery_caption || c.gallery_id}</p>
               <p>{c.text}</p>
               <time>{new Date(c.created_at).toLocaleString()}</time>
-              {c.status === 'pending' && (
-                <div className="admin-card__actions">
-                  <button type="button" className="btn btn--primary btn--sm" onClick={() => setStatus(c.id, 'approved')}>
+              <div className="admin-card__actions">
+                {c.status === 'pending' && (
+                  <>
+                    <button type="button" className="btn btn--primary btn--sm" onClick={() => setStatus(c.id, 'approved')}>
+                      Approve
+                    </button>
+                    <button type="button" className="btn btn--sm" onClick={() => setStatus(c.id, 'rejected')}>
+                      Reject
+                    </button>
+                  </>
+                )}
+                {c.status === 'approved' && (
+                  <button type="button" className="btn btn--sm" onClick={() => setStatus(c.id, 'rejected')}>
+                    Unpublish
+                  </button>
+                )}
+                {c.status === 'rejected' && (
+                  <button type="button" className="btn btn--sm" onClick={() => setStatus(c.id, 'approved')}>
                     Approve
                   </button>
-                  <button type="button" className="btn btn--sm admin-btn-danger" onClick={() => setStatus(c.id, 'rejected')}>
-                    Reject
-                  </button>
-                </div>
-              )}
+                )}
+                <button type="button" className="btn btn--sm admin-btn-danger" onClick={() => remove(c.id)}>
+                  Delete
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -381,6 +403,13 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
   const setStatus = async (id, status) => {
     await api.patchMessage(id, status)
     onNotice(status === 'accepted' ? 'Request accepted' : 'Updated')
+    await onRefresh()
+  }
+
+  const remove = async (id) => {
+    if (!confirm('Delete this message permanently?')) return
+    await api.deleteMessage(id)
+    onNotice('Message deleted')
     await onRefresh()
   }
 
@@ -403,19 +432,29 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
               </p>
               <p>{m.body}</p>
               <time>{new Date(m.created_at).toLocaleString()}</time>
-              {m.status === 'pending' && (
-                <div className="admin-card__actions">
-                  <button type="button" className="btn btn--primary btn--sm" onClick={() => setStatus(m.id, 'accepted')}>
-                    Accept
-                  </button>
+              <div className="admin-card__actions">
+                {m.status === 'pending' && (
+                  <>
+                    <button type="button" className="btn btn--primary btn--sm" onClick={() => setStatus(m.id, 'accepted')}>
+                      Accept
+                    </button>
+                    <button type="button" className="btn btn--sm" onClick={() => setStatus(m.id, 'read')}>
+                      Mark read
+                    </button>
+                    <button type="button" className="btn btn--sm" onClick={() => setStatus(m.id, 'rejected')}>
+                      Reject
+                    </button>
+                  </>
+                )}
+                {m.status !== 'pending' && m.status !== 'read' && (
                   <button type="button" className="btn btn--sm" onClick={() => setStatus(m.id, 'read')}>
                     Mark read
                   </button>
-                  <button type="button" className="btn btn--sm admin-btn-danger" onClick={() => setStatus(m.id, 'rejected')}>
-                    Reject
-                  </button>
-                </div>
-              )}
+                )}
+                <button type="button" className="btn btn--sm admin-btn-danger" onClick={() => remove(m.id)}>
+                  Delete
+                </button>
+              </div>
             </li>
           ))}
         </ul>
