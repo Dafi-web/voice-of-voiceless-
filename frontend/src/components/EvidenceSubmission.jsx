@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Section from './Section'
 import FormField from './FormField'
+import { api } from '../api/client'
 
 const EVIDENCE_TYPES = [
   'Witness testimony',
@@ -13,11 +14,43 @@ const EVIDENCE_TYPES = [
 
 export default function EvidenceSubmission() {
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
-    e.target.reset()
+    setLoading(true)
+    setError('')
+    const fd = new FormData(e.target)
+    const evidenceType = (fd.get('evidence-type') || 'Other').toString()
+    const description = (fd.get('evidence-description') || '').toString().trim()
+    const contact = (fd.get('evidence-contact') || '').toString().trim()
+    const files = (fd.get('evidence-files') || '').toString().trim()
+
+    const body = [
+      `Type: ${evidenceType}`,
+      '',
+      description,
+      files && `\nFile notes:\n${files}`,
+    ]
+      .filter(Boolean)
+      .join('\n')
+
+    try {
+      await api.postMessage({
+        name: contact ? 'Evidence submitter' : 'Anonymous',
+        email: contact || 'anonymous@beyond-silence.local',
+        subject: `Evidence submission: ${evidenceType}`,
+        body,
+        type: 'evidence',
+      })
+      setSubmitted(true)
+      e.target.reset()
+    } catch (err) {
+      setError(err.message || 'Could not send. Please try the contact form below.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -39,8 +72,8 @@ export default function EvidenceSubmission() {
       {submitted ? (
         <div className="message message--success" role="status">
           <p>
-            Evidence submission received. Connect a secure backend and encrypted
-            storage before accepting real submissions in production.
+            Evidence submission received. The admin team will review it. Do not send classified material
+            through this form without a secure channel agreed with the team.
           </p>
         </div>
       ) : (
@@ -86,12 +119,13 @@ export default function EvidenceSubmission() {
               name="evidence-files"
               className="form-field__input form-field__textarea"
               rows={3}
-              placeholder="Describe files you can provide separately via secure channel (do not paste sensitive content here until encryption is enabled)."
+              placeholder="Describe files you can provide separately via secure channel."
             />
           </FormField>
 
-          <button type="submit" className="btn btn--primary">
-            Submit evidence
+          {error && <p className="contact-form__error">{error}</p>}
+          <button type="submit" className="btn btn--primary" disabled={loading}>
+            {loading ? 'Sending…' : 'Submit evidence'}
           </button>
         </form>
       )}

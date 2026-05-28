@@ -1,7 +1,20 @@
-// Production: same-origin /api (Vercel rewrites to Render, or Render hosts API + site).
-// Dev: Vite proxies /api to localhost when VITE_API_URL is unset.
-const API_BASE =
-  import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+/** Same-origin /api on Vercel (proxy) and Render; optional direct URL in dev. */
+export function getApiBase() {
+  const fromEnv = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+  if (!import.meta.env.PROD) return fromEnv
+  if (typeof window === 'undefined') return fromEnv
+  if (import.meta.env.VITE_API_DIRECT === 'true' && fromEnv) return fromEnv
+  return ''
+}
+
+const API_BASE = getApiBase()
+
+export function mediaUrl(src) {
+  if (!src) return ''
+  if (/^https?:\/\//i.test(src)) return src
+  const path = src.startsWith('/') ? src : `/${src}`
+  return API_BASE ? `${API_BASE}${path}` : path
+}
 
 function getToken() {
   return localStorage.getItem('admin_token')
@@ -21,18 +34,36 @@ async function request(path, options = {}) {
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      credentials: API_BASE ? 'include' : 'same-origin',
+    })
+  } catch {
+    throw new Error(
+      'Cannot reach the server. On Vercel set VITE_API_URL to your Render URL and redeploy. On Render set ALLOW_VERCEL_PREVIEWS=true or fix ALLOWED_ORIGIN.',
+    )
+  }
+
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     if (res.status === 405) {
-      throw new Error('Server error: API not available. Redeploy with latest code or use Render hosting.')
+      throw new Error(
+        'API not available on this host. Set VITE_API_URL on Vercel to your Render backend and redeploy.',
+      )
     }
-    throw new Error(data.error || res.statusText)
+    if (res.status === 401) {
+      throw new Error(data.error || 'Not signed in or session expired.')
+    }
+    throw new Error(data.error || res.statusText || `Request failed (${res.status})`)
   }
   return data
 }
 
 export const api = {
+  health: () => request('/api/health'),
   login: (password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
   checkAuth: () => request('/api/auth/check'),
   changePassword: (currentPassword, newPassword) =>

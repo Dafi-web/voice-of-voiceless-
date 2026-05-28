@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Section from './Section'
 import GalleryImage from './GalleryImage'
 import ImageComments from './ImageComments'
-import { api } from '../api/client'
+import { api, mediaUrl } from '../api/client'
 import { GALLERY_ITEMS as FALLBACK } from '../data/gallery'
 
 export default function Gallery() {
@@ -68,10 +68,10 @@ export default function Gallery() {
               aria-label={`View: ${entry.caption}`}
             >
               {entry.type === 'video' ? (
-                <video src={entry.src} className="gallery__img" muted playsInline />
+                <video src={mediaUrl(entry.src)} className="gallery__img" muted playsInline />
               ) : (
                 <GalleryImage
-                  src={entry.src}
+                  src={mediaUrl(entry.src)}
                   fallback={entry.fallback}
                   alt={entry.caption}
                 />
@@ -115,9 +115,14 @@ export default function Gallery() {
             </button>
             <div className="lightbox__media">
               {item.type === 'video' ? (
-                <video src={item.src} className="gallery__img" controls autoPlay />
+                <video src={mediaUrl(item.src)} className="gallery__img" controls autoPlay />
               ) : (
-                <GalleryImage src={item.src} fallback={item.fallback} alt={item.caption} onClick={() => {}} />
+                <GalleryImage
+                  src={mediaUrl(item.src)}
+                  fallback={item.fallback}
+                  alt={item.caption}
+                  onClick={() => {}}
+                />
               )}
               <div className="lightbox__meta">
                 <p>{item.caption}</p>

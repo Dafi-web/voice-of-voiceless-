@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { api, setToken } from '../api/client'
+import { api, setToken, mediaUrl } from '../api/client'
 import '../admin.css'
 
 const TABS = [
@@ -22,6 +22,7 @@ export default function Admin() {
   const [comments, setComments] = useState([])
   const [messages, setMessages] = useState([])
   const [notice, setNotice] = useState('')
+  const [apiOk, setApiOk] = useState(null)
 
   const loadAll = useCallback(async () => {
     const [s, g, c, m] = await Promise.all([
@@ -42,6 +43,10 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
+    api.health().then(() => setApiOk(true)).catch(() => setApiOk(false))
+  }, [])
+
+  useEffect(() => {
     api
       .checkAuth()
       .then(() => {
@@ -59,9 +64,11 @@ export default function Admin() {
       const { token } = await api.login(password)
       setToken(token)
       setAuthed(true)
+      const hash = window.location.hash.replace(/^#/, '')
+      if (hash === 'password' || hash === 'settings') setTab('settings')
       await loadAll()
-    } catch {
-      setLoginError('Wrong password. Try again.')
+    } catch (err) {
+      setLoginError(err.message || 'Wrong password. Try again.')
     }
   }
 
@@ -84,11 +91,22 @@ export default function Admin() {
   }
 
   if (!authed) {
+    const wantPassword =
+      window.location.hash === '#password' || window.location.hash === '#settings'
+
     return (
       <div className="admin admin--login">
         <div className="admin-login">
           <h1>Beyond Silence</h1>
-          <p>Admin login — Rahwa</p>
+          <p>Admin — sign in to manage the site</p>
+          {apiOk === false && (
+            <p className="admin-error admin-login__banner">
+              Server not reachable. Check Vercel <code>VITE_API_URL</code> and Render deploy.
+            </p>
+          )}
+          {wantPassword && (
+            <p className="admin-settings-hint">Sign in first, then use the Password tab to change it.</p>
+          )}
           <form onSubmit={handleLogin}>
             <input
               type="password"
@@ -103,6 +121,15 @@ export default function Admin() {
               Sign in
             </button>
           </form>
+          <p className="admin-login__hint">
+            Default password: <code>rahwa2026</code> (until you change it under Password).
+          </p>
+          <ul className="admin-login__features">
+            <li>View contact messages & requests</li>
+            <li>Approve gallery comments</li>
+            <li>Upload photos & videos</li>
+            <li>Change admin password</li>
+          </ul>
           <Link to="/" className="admin-back">
             ← Back to site
           </Link>
@@ -286,9 +313,9 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
         {gallery.map((item) => (
           <li key={item.id} className="admin-gallery-item">
             {item.type === 'video' ? (
-              <video src={item.src} className="admin-gallery-item__thumb" muted />
+              <video src={mediaUrl(item.src)} className="admin-gallery-item__thumb" muted />
             ) : (
-              <img src={item.src} alt="" className="admin-gallery-item__thumb" />
+              <img src={mediaUrl(item.src)} alt="" className="admin-gallery-item__thumb" />
             )}
             <div className="admin-gallery-item__info">
               <p>{item.caption}</p>

@@ -216,9 +216,11 @@ app.patch('/api/comments/:id', authMiddleware, (req, res) => {
 
 app.post('/api/messages', (req, res) => {
   const { name, email, subject, body, type } = req.body
-  if (!name?.trim() || !email?.trim() || !subject?.trim() || !body?.trim()) {
-    return res.status(400).json({ error: 'All fields required' })
+  if (!name?.trim() || !subject?.trim() || !body?.trim()) {
+    return res.status(400).json({ error: 'Name, subject, and message are required' })
   }
+  const allowedTypes = ['contact', 'request', 'story', 'evidence']
+  const msgType = allowedTypes.includes(type) ? type : 'contact'
   const id = randomUUID()
   db.prepare(
     `INSERT INTO messages (id, name, email, subject, body, type, status, created_at)
@@ -226,10 +228,10 @@ app.post('/api/messages', (req, res) => {
   ).run(
     id,
     name.trim(),
-    email.trim(),
+    (email || 'not-provided@anonymous.local').trim(),
     subject.trim(),
     body.trim(),
-    type === 'request' ? 'request' : 'contact',
+    msgType,
     new Date().toISOString(),
   )
   res.status(201).json({ id, message: 'Your message was sent. We will respond soon.' })

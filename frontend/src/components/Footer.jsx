@@ -13,7 +13,8 @@ export default function Footer() {
           <a href="#about">About</a>
           <a href="#truth">The truth</a>
           <a href="#gallery">Gallery</a>
-          <a href="#justice">Justice</a>
+          <a href="#stories">Share story</a>
+          <a href="#evidence">Evidence</a>
           <a href="#contact">Contact</a>
         </nav>
         <p className="footer__copy">
