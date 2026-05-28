@@ -22,29 +22,31 @@ export default function Admin() {
   const [comments, setComments] = useState([])
   const [messages, setMessages] = useState([])
   const [notice, setNotice] = useState('')
-  const [apiOk, setApiOk] = useState(null)
+
+  const showNotice = useCallback((msg) => {
+    setNotice(msg)
+    setTimeout(() => setNotice(''), 3000)
+  }, [])
 
   const loadAll = useCallback(async () => {
-    const [s, g, c, m] = await Promise.all([
-      api.getStats(),
-      api.getGalleryAll(),
-      api.getCommentsAll(),
-      api.getMessages(),
-    ])
-    setStats(s)
-    setGallery(g)
-    setComments(c)
-    setMessages(m)
-  }, [])
-
-  useEffect(() => {
-    const hash = window.location.hash.replace(/^#/, '')
-    if (hash === 'password' || hash === 'settings') setTab('settings')
-  }, [])
-
-  useEffect(() => {
-    api.health().then(() => setApiOk(true)).catch(() => setApiOk(false))
-  }, [])
+    try {
+      const [s, g, c, m] = await Promise.all([
+        api.getStats(),
+        api.getGalleryAll(),
+        api.getCommentsAll(),
+        api.getMessages(),
+      ])
+      setStats(s && typeof s === 'object' ? s : null)
+      setGallery(Array.isArray(g) ? g : [])
+      setComments(Array.isArray(c) ? c : [])
+      setMessages(Array.isArray(m) ? m : [])
+    } catch (err) {
+      showNotice(err.message || 'Could not load admin data')
+      setGallery([])
+      setComments([])
+      setMessages([])
+    }
+  }, [showNotice])
 
   useEffect(() => {
     api
@@ -64,8 +66,6 @@ export default function Admin() {
       const { token } = await api.login(password)
       setToken(token)
       setAuthed(true)
-      const hash = window.location.hash.replace(/^#/, '')
-      if (hash === 'password' || hash === 'settings') setTab('settings')
       await loadAll()
     } catch (err) {
       setLoginError(err.message || 'Wrong password. Try again.')
@@ -77,11 +77,6 @@ export default function Admin() {
     setAuthed(false)
   }
 
-  const showNotice = (msg) => {
-    setNotice(msg)
-    setTimeout(() => setNotice(''), 3000)
-  }
-
   if (loading) {
     return (
       <div className="admin admin--center">
@@ -91,26 +86,19 @@ export default function Admin() {
   }
 
   if (!authed) {
-    const wantPassword =
-      window.location.hash === '#password' || window.location.hash === '#settings'
-
     return (
       <div className="admin admin--login">
         <div className="admin-login">
           <h1>Beyond Silence</h1>
-          <p>Admin — sign in to manage the site</p>
-          {apiOk === false && (
-            <p className="admin-error admin-login__banner">
-              Server not reachable. Check Vercel <code>VITE_API_URL</code> and Render deploy.
-            </p>
-          )}
-          {wantPassword && (
-            <p className="admin-settings-hint">Sign in first, then use the Password tab to change it.</p>
-          )}
+          <p className="admin-login__subtitle">Private admin area</p>
           <form onSubmit={handleLogin}>
+            <label className="admin-login__label" htmlFor="admin-password">
+              Password
+            </label>
             <input
+              id="admin-password"
               type="password"
-              placeholder="Admin password"
+              placeholder="Enter admin password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -121,15 +109,6 @@ export default function Admin() {
               Sign in
             </button>
           </form>
-          <p className="admin-login__hint">
-            Default password: <code>rahwa2026</code> (until you change it under Password).
-          </p>
-          <ul className="admin-login__features">
-            <li>View contact messages & requests</li>
-            <li>Approve gallery comments</li>
-            <li>Upload photos & videos</li>
-            <li>Change admin password</li>
-          </ul>
           <Link to="/" className="admin-back">
             ← Back to site
           </Link>
@@ -194,8 +173,10 @@ export default function Admin() {
 }
 
 function AdminOverview({ stats, comments, messages }) {
-  const pendingC = comments.filter((c) => c.status === 'pending')
-  const pendingM = messages.filter((m) => m.status === 'pending')
+  const commentList = Array.isArray(comments) ? comments : []
+  const messageList = Array.isArray(messages) ? messages : []
+  const pendingC = commentList.filter((c) => c.status === 'pending')
+  const pendingM = messageList.filter((m) => m.status === 'pending')
 
   return (
     <div className="admin-panel">
@@ -235,6 +216,7 @@ function AdminOverview({ stats, comments, messages }) {
 }
 
 function AdminGallery({ gallery, onRefresh, onNotice }) {
+  const items = Array.isArray(gallery) ? gallery : []
   const [caption, setCaption] = useState('')
   const [credit, setCredit] = useState('')
   const [link, setLink] = useState('')
@@ -308,9 +290,9 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
         </button>
       </form>
 
-      <h2>All gallery items ({gallery.length})</h2>
+      <h2>All gallery items ({items.length})</h2>
       <ul className="admin-gallery-list">
-        {gallery.map((item) => (
+        {items.map((item) => (
           <li key={item.id} className="admin-gallery-item">
             {item.type === 'video' ? (
               <video src={mediaUrl(item.src)} className="admin-gallery-item__thumb" muted />
@@ -339,6 +321,7 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
 }
 
 function AdminComments({ comments, onRefresh, onNotice }) {
+  const list = Array.isArray(comments) ? comments : []
   const setStatus = async (id, status) => {
     await api.patchComment(id, status)
     onNotice(status === 'approved' ? 'Comment approved' : status === 'rejected' ? 'Rejected' : 'Updated')
@@ -347,12 +330,12 @@ function AdminComments({ comments, onRefresh, onNotice }) {
 
   return (
     <div className="admin-panel">
-      <h2>User comments ({comments.length})</h2>
-      {comments.length === 0 ? (
+      <h2>User comments ({list.length})</h2>
+      {list.length === 0 ? (
         <p className="admin-empty">No comments yet.</p>
       ) : (
         <ul className="admin-card-list">
-          {comments.map((c) => (
+          {list.map((c) => (
             <li key={c.id} className="admin-card">
               <div className="admin-card__head">
                 <strong>{c.name}</strong>
@@ -380,6 +363,7 @@ function AdminComments({ comments, onRefresh, onNotice }) {
 }
 
 function AdminMessages({ messages, onRefresh, onNotice }) {
+  const list = Array.isArray(messages) ? messages : []
   const setStatus = async (id, status) => {
     await api.patchMessage(id, status)
     onNotice(status === 'accepted' ? 'Request accepted' : 'Updated')
@@ -388,12 +372,12 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
 
   return (
     <div className="admin-panel">
-      <h2>Messages & requests ({messages.length})</h2>
-      {messages.length === 0 ? (
+      <h2>Messages & requests ({list.length})</h2>
+      {list.length === 0 ? (
         <p className="admin-empty">No messages yet.</p>
       ) : (
         <ul className="admin-card-list">
-          {messages.map((m) => (
+          {list.map((m) => (
             <li key={m.id} className="admin-card">
               <div className="admin-card__head">
                 <strong>{m.name}</strong>

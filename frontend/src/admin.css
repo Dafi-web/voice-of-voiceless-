@@ -41,42 +41,19 @@
   font-size: 1rem;
 }
 
-.admin-login__banner {
-  text-align: left;
-  padding: 0.65rem 0.75rem;
-  background: #fde8ec;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
-}
-
-.admin-login__hint {
-  margin: 1rem 0 0;
-  font-size: 0.85rem;
+.admin-login__subtitle {
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
   color: #5c5348;
 }
 
-.admin-login__hint code {
-  font-size: 0.85em;
-}
-
-.admin-login__features {
-  margin: 1.25rem 0 0;
-  padding: 0;
-  list-style: none;
+.admin-login__label {
+  display: block;
   text-align: left;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
   color: #4a443c;
-}
-
-.admin-login__features li {
-  padding: 0.35rem 0;
-  border-bottom: 1px solid #eee9e0;
-}
-
-.admin-login__features li::before {
-  content: '✓ ';
-  color: #8b6914;
-  font-weight: 700;
 }
 
 .admin-error {

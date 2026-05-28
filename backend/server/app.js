@@ -194,7 +194,7 @@ app.post('/api/comments', (req, res) => {
   })
 })
 
-app.get('/api/comments', authMiddleware, (_req, res) => {
+function listAllComments(_req, res) {
   const rows = db
     .prepare(
       `SELECT c.*, g.caption as gallery_caption FROM comments c
@@ -203,7 +203,10 @@ app.get('/api/comments', authMiddleware, (_req, res) => {
     )
     .all()
   res.json(rows)
-})
+}
+
+app.get('/api/admin/comments', authMiddleware, listAllComments)
+app.get('/api/comments', authMiddleware, listAllComments)
 
 app.patch('/api/comments/:id', authMiddleware, (req, res) => {
   const { status } = req.body
@@ -237,10 +240,13 @@ app.post('/api/messages', (req, res) => {
   res.status(201).json({ id, message: 'Your message was sent. We will respond soon.' })
 })
 
-app.get('/api/messages', authMiddleware, (_req, res) => {
+function listAllMessages(_req, res) {
   const rows = db.prepare('SELECT * FROM messages ORDER BY created_at DESC').all()
   res.json(rows)
-})
+}
+
+app.get('/api/admin/messages', authMiddleware, listAllMessages)
+app.get('/api/messages', authMiddleware, listAllMessages)
 
 app.patch('/api/messages/:id', authMiddleware, (req, res) => {
   const { status } = req.body
