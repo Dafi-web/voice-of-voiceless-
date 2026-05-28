@@ -5,7 +5,16 @@ dist
 .env
 .env.*
 !.env.example
-data/*.db
-data/*.db-*
+
+frontend/node_modules
+frontend/dist
+
+backend/node_modules
+backend/data/*.db
+backend/data/*.db-*
+
 public/uploads/*
 !public/uploads/.gitkeep
+
+# WhatsApp images at repo root (optional local copies)
+WhatsApp*.jpeg

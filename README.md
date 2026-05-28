@@ -1,53 +1,36 @@
 # Beyond Silence
 
-Platform by **Rahwa Kahsay Tesfamariam** — exposing truth about Tigray and giving voice to the unheard.
+Platform by **Rahwa Kahsay Tesfamariam**.
 
-## Quick links
+## Project structure
 
-| Task | Guide |
-|------|--------|
-| **Deploy backend (Render)** | **[DEPLOY.md](./DEPLOY.md)** ← start here for admin & API |
-| Run locally | Below |
-| Admin features | [DEPLOY.md](./DEPLOY.md#step-6--use-the-site) |
+```
+voice/
+├── frontend/    React website (Vite)
+├── backend/     Express API, SQLite, admin, uploads
+├── DEPLOY.md    How to deploy (Render + Vercel)
+└── package.json Run both locally from root
+```
 
-## Architecture
-
-- **Frontend** — React (Vite)
-- **Backend** — Express API + SQLite database + file uploads
-- **Admin** — `/admin` (gallery, comments, messages, change password)
-
-**Production:** host the **full app on [Render](https://render.com)** so admin, forms, and uploads work.  
-Vercel alone is not enough for the backend — see **[DEPLOY.md](./DEPLOY.md)**.
-
-## Run locally
+## Quick start (local)
 
 ```bash
-npm install
-cp .env.example .env
+npm run install:all
+cp .env.example backend/.env
 npm run dev
 ```
 
-- **Website:** http://localhost:5173  
+- **Site:** http://localhost:5173  
 - **Admin:** http://localhost:5173/admin  
-- **Default password:** `rahwa2026` (change in admin → **Password** tab)
 
-## Admin features
+## Deploy
 
-| Tab | What you can do |
-|-----|-----------------|
-| **Overview** | Pending comments & messages |
-| **Gallery** | Upload images/videos |
-| **Comments** | Approve or reject |
-| **Messages** | Accept contact & requests |
-| **Password** | Change admin password after login |
+| What | Where | Guide |
+|------|--------|--------|
+| **Backend + full site** | [Render](https://render.com) | [DEPLOY.md](./DEPLOY.md#option-1--full-site-on-render-easiest) |
+| **Frontend only** | [Vercel](https://vercel.com) | [DEPLOY.md](./DEPLOY.md#option-2--frontend-on-vercel--backend-on-render) |
 
-## Scripts
-
-```bash
-npm run dev      # Frontend + API (ports 5173 + 3001)
-npm run build    # Build React → dist/
-npm run start    # Production server (API + site)
-```
+**Deploy instructions:** **[DEPLOY.md](./DEPLOY.md)**
 
 ## Repository
 

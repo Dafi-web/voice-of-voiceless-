@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import fs from 'fs'
 import path from 'path'
-import { dataDir, dbPath, isServerless, root, ensureDirs } from './paths.js'
+import { dbPath, isServerless, root, ensureDirs } from './paths.js'
 
 const localDbPath = path.join(root, 'data', 'site.db')
 

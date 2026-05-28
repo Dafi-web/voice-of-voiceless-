@@ -4,7 +4,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import db from './db.js'
-import { root, uploadsDir, isServerless, ensureDirs } from './paths.js'
+import { uploadsDir, isServerless, ensureDirs, frontendDist } from './paths.js'
 import { seedGalleryIfEmpty, randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 
@@ -260,11 +260,10 @@ app.get('/api/admin/stats', authMiddleware, (_req, res) => {
   res.json({ pendingComments, pendingMessages, galleryCount })
 })
 
-const distPath = path.join(root, 'dist')
-if (fs.existsSync(distPath) && !isServerless) {
-  app.use(express.static(distPath))
+if (fs.existsSync(frontendDist) && !isServerless) {
+  app.use(express.static(frontendDist))
   app.get(/^(?!\/api).*/, (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'))
+    res.sendFile(path.join(frontendDist, 'index.html'))
   })
 }
 
