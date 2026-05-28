@@ -1061,9 +1061,50 @@
 
 /* ─── Footer ─── */
 .footer {
+  position: relative;
   background: var(--color-bg-dark);
   color: var(--color-text-muted-on-dark);
   padding: 3rem 1.5rem;
+}
+
+.footer__admin {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem 0.5rem;
+  max-width: min(100% - 2rem, 20rem);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  z-index: 1;
+}
+
+.footer__admin a {
+  color: var(--color-gold-light);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer__admin a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.footer__admin-sep {
+  color: rgba(255, 255, 255, 0.35);
+  user-select: none;
+}
+
+@media (max-width: 480px) {
+  .footer__admin {
+    position: static;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    max-width: none;
+  }
 }
 
 .footer__inner {

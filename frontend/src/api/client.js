@@ -1,4 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_URL || ''
+// Production: same-origin /api (Vercel rewrites to Render, or Render hosts API + site).
+// Dev: Vite proxies /api to localhost when VITE_API_URL is unset.
+const API_BASE =
+  import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
 function getToken() {
   return localStorage.getItem('admin_token')
@@ -7,6 +10,7 @@ function getToken() {
 export function setToken(token) {
   if (token) localStorage.setItem('admin_token', token)
   else localStorage.removeItem('admin_token')
+  window.dispatchEvent(new Event('admin-token-changed'))
 }
 
 async function request(path, options = {}) {

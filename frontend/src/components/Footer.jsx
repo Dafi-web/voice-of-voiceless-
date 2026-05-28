@@ -1,9 +1,11 @@
 import Logo from './Logo'
+import FooterAdminLinks from './FooterAdminLinks'
 import { SITE_TAGLINE, SITE_DATE, SITE_OWNER_NAME, SITE_NAME } from '../constants/brand'
 
 export default function Footer() {
   return (
     <footer className="footer">
+      <FooterAdminLinks />
       <div className="footer__inner">
         <Logo size={36} className="footer__logo" />
         <p className="footer__tagline">{SITE_TAGLINE}</p>

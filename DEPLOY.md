@@ -77,21 +77,45 @@ Copy your Render URL: `https://beyond-silence-api.onrender.com`
 
 ### Deploy `frontend/` on Vercel
 
+Use **one** of these setups (not both):
+
+**A — Recommended**
+
 | Setting | Value |
 |---------|--------|
 | **Root directory** | `frontend` |
 | **Framework** | Vite |
-| **Build** | `npm run build` |
-| **Output** | `dist` |
+| **Build command** | *(leave default, or `npm run build`)* |
+| **Output directory** | `dist` |
+
+**B — Repo root**
+
+| Setting | Value |
+|---------|--------|
+| **Root directory** | *(empty)* |
+| **Build command** | `npm run build --prefix frontend` |
+| **Output directory** | `frontend/dist` |
+
+If the build succeeds but deploy fails with **“No Output Directory named dist”**, Vercel is looking in the wrong folder — use **A** or set **Output directory** to `frontend/dist` for **B**.
 
 **Environment variable on Vercel:**
 
 | Key | Value |
 |-----|--------|
-| `VITE_API_URL` | `https://your-backend.onrender.com` |
-| `ALLOWED_ORIGIN` | *(on backend)* `https://your-site.vercel.app` |
+| `VITE_API_URL` | `https://your-backend.onrender.com` (no trailing slash) |
 
-Redeploy both.
+Redeploy after saving. The build generates `vercel.json` rewrites so `/api/*` and `/uploads/*` forward to Render. Without this variable, the contact form hits Vercel and returns **405 Method Not Allowed**.
+
+**CORS on Render** (only if the browser calls Render directly, not when using Vercel `/api` proxy):
+
+| Key | Value |
+|-----|--------|
+| `ALLOWED_ORIGIN` | `https://voice-of-voiceless-smoky.vercel.app` (your **current** Vercel URL) |
+
+Multiple sites: comma-separated `ALLOWED_ORIGINS`.  
+All Vercel previews: set `ALLOW_VERCEL_PREVIEWS=true` instead of listing every preview URL.
+
+If you see CORS errors mentioning `voice-of-voiceless-alpha.vercel.app` while using `smoky`, update `ALLOWED_ORIGIN` on Render and redeploy — an old preview URL was saved there.
 
 ---
 

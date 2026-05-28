@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import { createCorsOptions } from './cors.js'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
@@ -14,8 +15,7 @@ seedGalleryIfEmpty()
 
 const app = express()
 
-const corsOrigin = process.env.ALLOWED_ORIGIN || true
-app.use(cors({ origin: corsOrigin, credentials: true }))
+app.use(cors(createCorsOptions()))
 app.use(express.json())
 app.use('/uploads', express.static(uploadsDir))
 

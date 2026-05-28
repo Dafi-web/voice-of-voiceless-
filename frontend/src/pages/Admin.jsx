@@ -37,6 +37,11 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, '')
+    if (hash === 'password' || hash === 'settings') setTab('settings')
+  }, [])
+
+  useEffect(() => {
     api
       .checkAuth()
       .then(() => {
