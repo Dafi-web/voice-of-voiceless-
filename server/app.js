@@ -3,25 +3,19 @@ import cors from 'cors'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
-import { fileURLToPath } from 'url'
 import db from './db.js'
+import { root, uploadsDir, isServerless, ensureDirs } from './paths.js'
 import { seedGalleryIfEmpty, randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.join(__dirname, '..')
-const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
-const uploadsDir = isServerless
-  ? '/tmp/uploads'
-  : path.join(root, 'public', 'uploads')
-
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
+ensureDirs()
 
 seedGalleryIfEmpty()
 
 const app = express()
 
-app.use(cors())
+const corsOrigin = process.env.ALLOWED_ORIGIN || true
+app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
 app.use('/uploads', express.static(uploadsDir))
 
@@ -58,6 +52,10 @@ function rowToGallery(row) {
     createdAt: row.created_at,
   }
 }
+
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, service: 'beyond-silence-api' })
+})
 
 app.post('/api/auth/login', (req, res) => {
   const { password } = req.body

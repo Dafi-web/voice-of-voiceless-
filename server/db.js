@@ -1,19 +1,11 @@
 import Database from 'better-sqlite3'
-import path from 'path'
 import fs from 'fs'
-import { fileURLToPath } from 'url'
+import path from 'path'
+import { dataDir, dbPath, isServerless, root, ensureDirs } from './paths.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.join(__dirname, '..')
-const dataDir = path.join(root, 'data')
-const localDbPath = path.join(dataDir, 'site.db')
+const localDbPath = path.join(root, 'data', 'site.db')
 
-const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
-const dbPath = isServerless ? '/tmp/site.db' : localDbPath
-
-if (!isServerless && !fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true })
-}
+ensureDirs()
 
 if (isServerless && !fs.existsSync(dbPath)) {
   if (fs.existsSync(localDbPath)) {

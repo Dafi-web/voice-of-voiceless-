@@ -1,0 +1,29 @@
+# Render Blueprint — deploy backend + full site in one service
+# Docs: https://github.com/Dafi-web/voice-of-voiceless-/blob/main/DEPLOY.md
+
+services:
+  - type: web
+    name: beyond-silence
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: UPLOADS_DIR
+        value: /opt/render/project/src/data/uploads
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: beyond-silence-disk
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
