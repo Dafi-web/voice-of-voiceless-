@@ -19,7 +19,12 @@ async function request(path, options = {}) {
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || res.statusText)
+  if (!res.ok) {
+    if (res.status === 405) {
+      throw new Error('Server error: API not available. Redeploy with latest code or use Render hosting.')
+    }
+    throw new Error(data.error || res.statusText)
+  }
   return data
 }
 

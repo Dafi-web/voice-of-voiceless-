@@ -1,13 +1,25 @@
 import Database from 'better-sqlite3'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import fs from 'fs'
+import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const dataDir = path.join(__dirname, '..', 'data')
-const dbPath = path.join(dataDir, 'site.db')
+const root = path.join(__dirname, '..')
+const dataDir = path.join(root, 'data')
+const localDbPath = path.join(dataDir, 'site.db')
 
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+const dbPath = isServerless ? '/tmp/site.db' : localDbPath
+
+if (!isServerless && !fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true })
+}
+
+if (isServerless && !fs.existsSync(dbPath)) {
+  if (fs.existsSync(localDbPath)) {
+    fs.copyFileSync(localDbPath, dbPath)
+  }
+}
 
 const db = new Database(dbPath)
 db.pragma('journal_mode = WAL')
