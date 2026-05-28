@@ -31,6 +31,11 @@ async function request(path, options = {}) {
 export const api = {
   login: (password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
   checkAuth: () => request('/api/auth/check'),
+  changePassword: (currentPassword, newPassword) =>
+    request('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
 
   getGallery: () => request('/api/gallery'),
   getGalleryAll: () => request('/api/gallery/all'),

@@ -8,6 +8,7 @@ const TABS = [
   { id: 'gallery', label: 'Gallery' },
   { id: 'comments', label: 'Comments' },
   { id: 'messages', label: 'Messages' },
+  { id: 'settings', label: 'Password' },
 ]
 
 export default function Admin() {
@@ -154,6 +155,7 @@ export default function Admin() {
         {tab === 'messages' && (
           <AdminMessages messages={messages} onRefresh={loadAll} onNotice={showNotice} />
         )}
+        {tab === 'settings' && <AdminSettings onNotice={showNotice} />}
       </div>
     </div>
   )
@@ -388,6 +390,85 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+function AdminSettings({ onNotice }) {
+  const [current, setCurrent] = useState('')
+  const [next, setNext] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (next !== confirm) {
+      setError('New passwords do not match')
+      return
+    }
+    if (next.length < 6) {
+      setError('New password must be at least 6 characters')
+      return
+    }
+    setSaving(true)
+    try {
+      await api.changePassword(current, next)
+      setCurrent('')
+      setNext('')
+      setConfirm('')
+      onNotice('Password changed! Use the new password next time you log in.')
+    } catch (err) {
+      setError(err.message || 'Could not change password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="admin-panel">
+      <h2>Change admin password</h2>
+      <p className="admin-settings-hint">
+        Log in once, then set your own password here. After you save, the old password
+        (including the default) will no longer work.
+      </p>
+      <form className="admin-form admin-form--narrow" onSubmit={handleSubmit}>
+        <label>
+          Current password *
+          <input
+            type="password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+        </label>
+        <label>
+          New password * (min. 6 characters)
+          <input
+            type="password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
+        </label>
+        <label>
+          Confirm new password *
+          <input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
+        </label>
+        {error && <p className="admin-error">{error}</p>}
+        <button type="submit" className="btn btn--primary" disabled={saving}>
+          {saving ? 'Saving…' : 'Update password'}
+        </button>
+      </form>
     </div>
   )
 }

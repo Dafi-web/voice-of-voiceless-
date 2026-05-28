@@ -337,6 +337,18 @@
   font-style: italic;
 }
 
+.admin-form--narrow {
+  max-width: 400px;
+}
+
+.admin-settings-hint {
+  color: #5a6270;
+  font-size: 0.95rem;
+  max-width: 480px;
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+}
+
 .admin-list {
   margin: 0;
   padding-left: 1.25rem;

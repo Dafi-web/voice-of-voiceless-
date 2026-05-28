@@ -6,7 +6,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import db from './db.js'
 import { seedGalleryIfEmpty, randomUUID } from './seed.js'
-import { verifyPassword, signToken, authMiddleware } from './auth.js'
+import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..')
@@ -69,6 +69,15 @@ app.post('/api/auth/login', (req, res) => {
 
 app.get('/api/auth/check', authMiddleware, (_req, res) => {
   res.json({ ok: true })
+})
+
+app.post('/api/auth/change-password', authMiddleware, (req, res) => {
+  const { currentPassword, newPassword } = req.body
+  const result = changePassword(currentPassword, newPassword)
+  if (!result.ok) {
+    return res.status(400).json({ error: result.error })
+  }
+  res.json({ message: 'Password updated successfully' })
 })
 
 app.get('/api/gallery', (_req, res) => {
