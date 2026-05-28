@@ -12,9 +12,7 @@ export function createCorsOptions() {
     .filter(Boolean)
   const allowVercelPreviews =
     process.env.ALLOW_VERCEL_PREVIEWS === 'true' ||
-    (process.env.ALLOW_VERCEL_PREVIEWS !== 'false' &&
-      process.env.NODE_ENV === 'production' &&
-      allowList.length > 0)
+    (process.env.ALLOW_VERCEL_PREVIEWS !== 'false' && process.env.NODE_ENV === 'production')
 
   if (allowList.length === 0 && !allowVercelPreviews) {
     return { origin: true, credentials: true }

@@ -1,9 +1,14 @@
-/** Same-origin /api on Vercel (proxy) and Render; optional direct URL in dev. */
+/** Backend URL from build env; empty in dev uses Vite proxy. */
 export function getApiBase() {
   const fromEnv = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
-  if (!import.meta.env.PROD) return fromEnv
-  if (typeof window === 'undefined') return fromEnv
-  if (import.meta.env.VITE_API_DIRECT === 'true' && fromEnv) return fromEnv
+  if (fromEnv) return fromEnv
+  if (
+    import.meta.env.PROD &&
+    typeof window !== 'undefined' &&
+    window.location.hostname.includes('onrender.com')
+  ) {
+    return ''
+  }
   return ''
 }
 
@@ -16,14 +21,22 @@ export function mediaUrl(src) {
   return API_BASE ? `${API_BASE}${path}` : path
 }
 
+const TOKEN_KEY = 'admin_token'
+
 function getToken() {
-  return localStorage.getItem('admin_token')
+  return sessionStorage.getItem(TOKEN_KEY)
 }
 
 export function setToken(token) {
-  if (token) localStorage.setItem('admin_token', token)
-  else localStorage.removeItem('admin_token')
+  if (token) sessionStorage.setItem(TOKEN_KEY, token)
+  else sessionStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(TOKEN_KEY)
   window.dispatchEvent(new Event('admin-token-changed'))
+}
+
+function isJsonResponse(res) {
+  const type = res.headers.get('content-type') || ''
+  return type.includes('application/json')
 }
 
 async function request(path, options = {}) {
@@ -43,22 +56,41 @@ async function request(path, options = {}) {
     })
   } catch {
     throw new Error(
-      'Cannot reach the server. On Vercel set VITE_API_URL to your Render URL and redeploy. On Render set ALLOW_VERCEL_PREVIEWS=true or fix ALLOWED_ORIGIN.',
+      'Cannot reach the server. Confirm Render is running and VITE_API_URL matches your Render URL, then redeploy Vercel.',
+    )
+  }
+
+  if (path.startsWith('/api') && !isJsonResponse(res)) {
+    if (res.status === 405 || res.status === 404) {
+      throw new Error(
+        'API not available on this site. Redeploy Vercel with VITE_API_URL set to your Render backend URL.',
+      )
+    }
+    throw new Error(
+      'Server returned an invalid response (expected JSON). Check VITE_API_URL and redeploy.',
     )
   }
 
   const data = await res.json().catch(() => ({}))
+
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      setToken(null)
+      throw new Error(data.error || 'Session expired. Sign in again.')
+    }
     if (res.status === 405) {
       throw new Error(
-        'API not available on this host. Set VITE_API_URL on Vercel to your Render backend and redeploy.',
+        'API not available (405). Set VITE_API_URL on Vercel to your Render URL and redeploy.',
       )
-    }
-    if (res.status === 401) {
-      throw new Error(data.error || 'Not signed in or session expired.')
     }
     throw new Error(data.error || res.statusText || `Request failed (${res.status})`)
   }
+
+  if (path === '/api/auth/check' && data.ok !== true) {
+    setToken(null)
+    throw new Error('Session expired. Sign in again.')
+  }
+
   return data
 }
 

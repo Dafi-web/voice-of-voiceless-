@@ -49,13 +49,27 @@ export default function Admin() {
   }, [showNotice])
 
   useEffect(() => {
+    const token = sessionStorage.getItem('admin_token') || localStorage.getItem('admin_token')
+    if (!token) {
+      localStorage.removeItem('admin_token')
+      setLoading(false)
+      return
+    }
+    if (localStorage.getItem('admin_token') && !sessionStorage.getItem('admin_token')) {
+      sessionStorage.setItem('admin_token', localStorage.getItem('admin_token'))
+      localStorage.removeItem('admin_token')
+    }
+
     api
       .checkAuth()
       .then(() => {
         setAuthed(true)
         return loadAll()
       })
-      .catch(() => setAuthed(false))
+      .catch(() => {
+        setToken(null)
+        setAuthed(false)
+      })
       .finally(() => setLoading(false))
   }, [loadAll])
 

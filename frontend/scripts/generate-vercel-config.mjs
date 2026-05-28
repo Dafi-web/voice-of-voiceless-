@@ -4,7 +4,9 @@ import { fileURLToPath } from 'url'
 
 const frontendRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const repoRoot = path.join(frontendRoot, '..')
-const apiBase = (process.env.VITE_API_URL || '').replace(/\/$/, '')
+const apiBase = (
+  process.env.VITE_API_URL || 'https://voice-of-voiceless-1.onrender.com'
+).replace(/\/$/, '')
 
 const rewrites = []
 if (apiBase) {
