@@ -2,29 +2,39 @@ import { useState, useEffect } from 'react'
 import Section from './Section'
 import GalleryImage from './GalleryImage'
 import ImageComments from './ImageComments'
-import { GALLERY_ITEMS } from '../data/gallery'
-import { getCommentCount } from '../hooks/useImageComments'
+import { api } from '../api/client'
+import { GALLERY_ITEMS as FALLBACK } from '../data/gallery'
 
 export default function Gallery() {
+  const [items, setItems] = useState(FALLBACK)
   const [active, setActive] = useState(null)
-  const [, setTick] = useState(0)
+  const loadGallery = () => {
+    api
+      .getGallery()
+      .then((data) => {
+        if (data?.length) setItems(data)
+      })
+      .catch(() => setItems(FALLBACK))
+  }
 
-  const refreshCounts = () => setTick((n) => n + 1)
+  useEffect(() => {
+    loadGallery()
+  }, [])
+
+  const refreshCounts = () => loadGallery()
 
   const close = () => setActive(null)
   const showPrev = () =>
-    setActive((i) => (i === null ? null : (i - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length))
-  const showNext = () =>
-    setActive((i) => (i === null ? null : (i + 1) % GALLERY_ITEMS.length))
+    setActive((i) => (i === null ? null : (i - 1 + items.length) % items.length))
+  const showNext = () => setActive((i) => (i === null ? null : (i + 1) % items.length))
 
   useEffect(() => {
     if (active === null) return undefined
 
     const onKey = (e) => {
       if (e.key === 'Escape') setActive(null)
-      if (e.key === 'ArrowLeft')
-        setActive((i) => (i - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length)
-      if (e.key === 'ArrowRight') setActive((i) => (i + 1) % GALLERY_ITEMS.length)
+      if (e.key === 'ArrowLeft') showPrev()
+      if (e.key === 'ArrowRight') showNext()
     }
 
     document.body.style.overflow = 'hidden'
@@ -33,15 +43,15 @@ export default function Gallery() {
       document.body.style.overflow = ''
       window.removeEventListener('keydown', onKey)
     }
-  }, [active])
+  }, [active, items.length])
 
-  const item = active !== null ? GALLERY_ITEMS[active] : null
+  const item = active !== null ? items[active] : null
 
   return (
     <Section
       id="gallery"
       title="Evidence gallery"
-      subtitle="Photographs from international reporting — proof the world cannot ignore. Leave a comment on any image."
+      subtitle="Photographs and videos — proof the world cannot ignore. Leave a comment on any item."
       wide
     >
       <p className="gallery__warning">
@@ -49,46 +59,43 @@ export default function Gallery() {
       </p>
 
       <ul className="gallery__grid">
-        {GALLERY_ITEMS.map((entry, index) => {
-          const count = getCommentCount(entry.id)
-          return (
-            <li key={entry.id} className="gallery__item">
-              <button
-                type="button"
-                className="gallery__thumb"
-                onClick={() => setActive(index)}
-                aria-label={`View image: ${entry.caption}`}
-              >
+        {items.map((entry, index) => (
+          <li key={entry.id} className="gallery__item">
+            <button
+              type="button"
+              className="gallery__thumb"
+              onClick={() => setActive(index)}
+              aria-label={`View: ${entry.caption}`}
+            >
+              {entry.type === 'video' ? (
+                <video src={entry.src} className="gallery__img" muted playsInline />
+              ) : (
                 <GalleryImage
                   src={entry.src}
                   fallback={entry.fallback}
                   alt={entry.caption}
                 />
-                {entry.isArticle && (
-                  <span className="gallery__badge">Read report</span>
+              )}
+              {entry.type === 'video' && <span className="gallery__badge">Video</span>}
+              {entry.isArticle && <span className="gallery__badge">Read report</span>}
+            </button>
+            <figcaption className="gallery__caption">
+              <p>{entry.caption}</p>
+              <cite>
+                {entry.credit}
+                {entry.link && (
+                  <>
+                    {' · '}
+                    <a href={entry.link} target="_blank" rel="noopener noreferrer">
+                      Source
+                    </a>
+                  </>
                 )}
-                {count > 0 && (
-                  <span className="gallery__comment-count">{count} comments</span>
-                )}
-              </button>
-              <figcaption className="gallery__caption">
-                <p>{entry.caption}</p>
-                <cite>
-                  {entry.credit}
-                  {entry.link && (
-                    <>
-                      {' · '}
-                      <a href={entry.link} target="_blank" rel="noopener noreferrer">
-                        Source
-                      </a>
-                    </>
-                  )}
-                </cite>
-              </figcaption>
-              <ImageComments imageId={entry.id} compact onPosted={refreshCounts} />
-            </li>
-          )
-        })}
+              </cite>
+            </figcaption>
+            <ImageComments imageId={entry.id} compact onPosted={refreshCounts} />
+          </li>
+        ))}
       </ul>
 
       {item && (
@@ -96,7 +103,7 @@ export default function Gallery() {
           className="lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label="Image viewer"
+          aria-label="Media viewer"
           onClick={close}
         >
           <div className="lightbox__inner lightbox__inner--with-comments" onClick={(e) => e.stopPropagation()}>
@@ -107,23 +114,17 @@ export default function Gallery() {
               ‹
             </button>
             <div className="lightbox__media">
-              <GalleryImage
-                src={item.src}
-                fallback={item.fallback}
-                alt={item.caption}
-                onClick={() => {}}
-              />
+              {item.type === 'video' ? (
+                <video src={item.src} className="gallery__img" controls autoPlay />
+              ) : (
+                <GalleryImage src={item.src} fallback={item.fallback} alt={item.caption} onClick={() => {}} />
+              )}
               <div className="lightbox__meta">
                 <p>{item.caption}</p>
                 <cite>{item.credit}</cite>
                 {item.link && (
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="lightbox__link"
-                  >
-                    {item.isArticle ? 'Read full New York Times report →' : 'View source →'}
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="lightbox__link">
+                    View source →
                   </a>
                 )}
               </div>

@@ -1,51 +1,40 @@
 import { useState, useEffect, useCallback } from 'react'
-
-const STORAGE_KEY = 'vov-gallery-comments'
-
-function loadAll() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
-}
-
-function saveAll(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
+import { api } from '../api/client'
 
 export function useImageComments(imageId) {
   const [comments, setComments] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const all = loadAll()
-    setComments(all[imageId] || [])
+  const refresh = useCallback(() => {
+    if (!imageId) return
+    setLoading(true)
+    api
+      .getComments(imageId)
+      .then(setComments)
+      .catch(() => setComments([]))
+      .finally(() => setLoading(false))
   }, [imageId])
 
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
   const addComment = useCallback(
-    (name, text) => {
-      const entry = {
-        id: crypto.randomUUID(),
+    async (name, text) => {
+      const result = await api.postComment({
+        galleryId: imageId,
         name: name.trim() || 'Anonymous',
         text: text.trim(),
-        date: new Date().toISOString(),
-      }
-
-      const all = loadAll()
-      const updated = [...(all[imageId] || []), entry]
-      all[imageId] = updated
-      saveAll(all)
-      setComments(updated)
-      return entry
+      })
+      refresh()
+      return result
     },
-    [imageId],
+    [imageId, refresh],
   )
 
-  return { comments, addComment }
+  return { comments, addComment, loading, refresh }
 }
 
-export function getCommentCount(imageId) {
-  const all = loadAll()
-  return (all[imageId] || []).length
+export function getCommentCount() {
+  return 0
 }

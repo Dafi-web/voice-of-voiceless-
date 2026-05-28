@@ -4,3 +4,7 @@ dist
 *.local
 .env
 .env.*
+data/*.db
+data/*.db-*
+public/uploads/*
+!public/uploads/.gitkeep
