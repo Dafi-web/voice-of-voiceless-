@@ -4,14 +4,12 @@ import { createCorsOptions } from './cors.js'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
-import db from './db.js'
 import { uploadsDir, isServerless, ensureDirs, frontendDist } from './paths.js'
-import { seedGalleryIfEmpty, randomUUID } from './seed.js'
+import { randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
+import { store, storeBackend } from './store/index.js'
 
 ensureDirs()
-
-seedGalleryIfEmpty()
 
 const app = express()
 
@@ -47,19 +45,19 @@ function rowToGallery(row) {
     caption: row.caption,
     credit: row.credit,
     link: row.link,
-    isArticle: !!row.is_article,
-    published: !!row.published,
+    isArticle: !!(row.is_article ?? row.isArticle),
+    published: !!(row.published),
     createdAt: row.created_at,
   }
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'beyond-silence-api' })
+  res.json({ ok: true, service: 'beyond-silence-api', database: storeBackend })
 })
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { password } = req.body
-  if (!verifyPassword(password)) {
+  if (!(await verifyPassword(password))) {
     return res.status(401).json({ error: 'Wrong password' })
   }
   res.json({ token: signToken() })
@@ -69,28 +67,26 @@ app.get('/api/auth/check', authMiddleware, (_req, res) => {
   res.json({ ok: true })
 })
 
-app.post('/api/auth/change-password', authMiddleware, (req, res) => {
+app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
   const { currentPassword, newPassword } = req.body
-  const result = changePassword(currentPassword, newPassword)
+  const result = await changePassword(currentPassword, newPassword)
   if (!result.ok) {
     return res.status(400).json({ error: result.error })
   }
   res.json({ message: 'Password updated successfully' })
 })
 
-app.get('/api/gallery', (_req, res) => {
-  const rows = db
-    .prepare('SELECT * FROM gallery WHERE published = 1 ORDER BY created_at DESC')
-    .all()
+app.get('/api/gallery', async (_req, res) => {
+  const rows = await store.listGalleryPublished()
   res.json(rows.map(rowToGallery))
 })
 
-app.get('/api/gallery/all', authMiddleware, (_req, res) => {
-  const rows = db.prepare('SELECT * FROM gallery ORDER BY created_at DESC').all()
+app.get('/api/gallery/all', authMiddleware, async (_req, res) => {
+  const rows = await store.listGalleryAll()
   res.json(rows.map(rowToGallery))
 })
 
-app.post('/api/gallery', authMiddleware, upload.single('file'), (req, res) => {
+app.post('/api/gallery', authMiddleware, upload.single('file'), async (req, res) => {
   try {
     const { caption, credit, link, type, published } = req.body
     const id = randomUUID()
@@ -108,61 +104,40 @@ app.post('/api/gallery', authMiddleware, upload.single('file'), (req, res) => {
 
     const mediaType = type || (src.match(/\.(mp4|webm|mov|ogg)$/i) ? 'video' : 'image')
 
-    db.prepare(
-      `INSERT INTO gallery (id, type, src, caption, credit, link, is_article, published, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-    ).run(
+    await store.insertGallery({
       id,
-      mediaType,
+      type: mediaType,
       src,
       caption,
-      credit || '',
-      link || '',
-      published === 'false' || published === false ? 0 : 1,
-      new Date().toISOString(),
-    )
+      credit: credit || '',
+      link: link || '',
+      is_article: 0,
+      published: published === 'false' || published === false ? 0 : 1,
+      created_at: new Date().toISOString(),
+    })
 
-    const row = db.prepare('SELECT * FROM gallery WHERE id = ?').get(id)
+    const row = await store.getGalleryById(id)
     res.status(201).json(rowToGallery(row))
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.patch('/api/gallery/:id', authMiddleware, (req, res) => {
+app.patch('/api/gallery/:id', authMiddleware, async (req, res) => {
   const { published, caption, credit, link } = req.body
-  const row = db.prepare('SELECT * FROM gallery WHERE id = ?').get(req.params.id)
+  const row = await store.updateGallery(req.params.id, { published, caption, credit, link })
   if (!row) return res.status(404).json({ error: 'Not found' })
-
-  db.prepare(
-    `UPDATE gallery SET
-      published = COALESCE(?, published),
-      caption = COALESCE(?, caption),
-      credit = COALESCE(?, credit),
-      link = COALESCE(?, link)
-     WHERE id = ?`,
-  ).run(
-    published !== undefined ? (published ? 1 : 0) : null,
-    caption ?? null,
-    credit ?? null,
-    link ?? null,
-    req.params.id,
-  )
-
-  res.json(rowToGallery(db.prepare('SELECT * FROM gallery WHERE id = ?').get(req.params.id)))
+  res.json(rowToGallery(row))
 })
 
-app.delete('/api/gallery/:id', authMiddleware, (req, res) => {
-  db.prepare('DELETE FROM gallery WHERE id = ?').run(req.params.id)
+app.delete('/api/gallery/:id', authMiddleware, async (req, res) => {
+  const ok = await store.deleteGallery(req.params.id)
+  if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 
-app.get('/api/comments/:galleryId', (req, res) => {
-  const rows = db
-    .prepare(
-      `SELECT * FROM comments WHERE gallery_id = ? AND status = 'approved' ORDER BY created_at DESC`,
-    )
-    .all(req.params.galleryId)
+app.get('/api/comments/:galleryId', async (req, res) => {
+  const rows = await store.listCommentsApproved(req.params.galleryId)
   res.json(
     rows.map((r) => ({
       id: r.id,
@@ -173,19 +148,24 @@ app.get('/api/comments/:galleryId', (req, res) => {
   )
 })
 
-app.post('/api/comments', (req, res) => {
+app.post('/api/comments', async (req, res) => {
   const { galleryId, name, text } = req.body
   if (!galleryId || !text?.trim()) {
     return res.status(400).json({ error: 'galleryId and text required' })
   }
-  const gallery = db.prepare('SELECT id FROM gallery WHERE id = ?').get(galleryId)
+  const gallery = await store.getGalleryById(galleryId)
   if (!gallery) return res.status(404).json({ error: 'Gallery item not found' })
 
   const id = randomUUID()
   const created_at = new Date().toISOString()
-  db.prepare(
-    `INSERT INTO comments (id, gallery_id, name, text, status, created_at) VALUES (?, ?, ?, ?, 'pending', ?)`,
-  ).run(id, galleryId, (name || 'Anonymous').trim(), text.trim(), created_at)
+  await store.insertComment({
+    id,
+    gallery_id: galleryId,
+    name: (name || 'Anonymous').trim(),
+    text: text.trim(),
+    status: 'pending',
+    created_at,
+  })
 
   res.status(201).json({
     id,
@@ -194,36 +174,31 @@ app.post('/api/comments', (req, res) => {
   })
 })
 
-function listAllComments(_req, res) {
-  const rows = db
-    .prepare(
-      `SELECT c.*, g.caption as gallery_caption FROM comments c
-       LEFT JOIN gallery g ON g.id = c.gallery_id
-       ORDER BY c.created_at DESC`,
-    )
-    .all()
+async function listAllComments(_req, res) {
+  const rows = await store.listCommentsAll()
   res.json(rows)
 }
 
 app.get('/api/admin/comments', authMiddleware, listAllComments)
 app.get('/api/comments', authMiddleware, listAllComments)
 
-app.patch('/api/comments/:id', authMiddleware, (req, res) => {
+app.patch('/api/comments/:id', authMiddleware, async (req, res) => {
   const { status } = req.body
   if (!['pending', 'approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' })
   }
-  db.prepare('UPDATE comments SET status = ? WHERE id = ?').run(status, req.params.id)
+  const ok = await store.updateCommentStatus(req.params.id, status)
+  if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 
-app.delete('/api/comments/:id', authMiddleware, (req, res) => {
-  const result = db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id)
-  if (result.changes === 0) return res.status(404).json({ error: 'Not found' })
+app.delete('/api/comments/:id', authMiddleware, async (req, res) => {
+  const ok = await store.deleteComment(req.params.id)
+  if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
   const { name, email, subject, body, type } = req.body
   if (!name?.trim() || !subject?.trim() || !body?.trim()) {
     return res.status(400).json({ error: 'Name, subject, and message are required' })
@@ -231,53 +206,45 @@ app.post('/api/messages', (req, res) => {
   const allowedTypes = ['contact', 'request', 'story', 'evidence']
   const msgType = allowedTypes.includes(type) ? type : 'contact'
   const id = randomUUID()
-  db.prepare(
-    `INSERT INTO messages (id, name, email, subject, body, type, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
-  ).run(
+  await store.insertMessage({
     id,
-    name.trim(),
-    (email || 'not-provided@anonymous.local').trim(),
-    subject.trim(),
-    body.trim(),
-    msgType,
-    new Date().toISOString(),
-  )
+    name: name.trim(),
+    email: (email || 'not-provided@anonymous.local').trim(),
+    subject: subject.trim(),
+    body: body.trim(),
+    type: msgType,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  })
   res.status(201).json({ id, message: 'Your message was sent. We will respond soon.' })
 })
 
-function listAllMessages(_req, res) {
-  const rows = db.prepare('SELECT * FROM messages ORDER BY created_at DESC').all()
+async function listAllMessages(_req, res) {
+  const rows = await store.listMessagesAll()
   res.json(rows)
 }
 
 app.get('/api/admin/messages', authMiddleware, listAllMessages)
 app.get('/api/messages', authMiddleware, listAllMessages)
 
-app.patch('/api/messages/:id', authMiddleware, (req, res) => {
+app.patch('/api/messages/:id', authMiddleware, async (req, res) => {
   const { status } = req.body
   if (!['pending', 'accepted', 'rejected', 'read'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' })
   }
-  db.prepare('UPDATE messages SET status = ? WHERE id = ?').run(status, req.params.id)
+  const ok = await store.updateMessageStatus(req.params.id, status)
+  if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 
-app.delete('/api/messages/:id', authMiddleware, (req, res) => {
-  const result = db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id)
-  if (result.changes === 0) return res.status(404).json({ error: 'Not found' })
+app.delete('/api/messages/:id', authMiddleware, async (req, res) => {
+  const ok = await store.deleteMessage(req.params.id)
+  if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
 })
 
-app.get('/api/admin/stats', authMiddleware, (_req, res) => {
-  const pendingComments = db
-    .prepare(`SELECT COUNT(*) as c FROM comments WHERE status = 'pending'`)
-    .get().c
-  const pendingMessages = db
-    .prepare(`SELECT COUNT(*) as c FROM messages WHERE status = 'pending'`)
-    .get().c
-  const galleryCount = db.prepare(`SELECT COUNT(*) as c FROM gallery`).get().c
-  res.json({ pendingComments, pendingMessages, galleryCount })
+app.get('/api/admin/stats', authMiddleware, async (_req, res) => {
+  res.json(await store.getStats())
 })
 
 if (fs.existsSync(frontendDist) && !isServerless) {

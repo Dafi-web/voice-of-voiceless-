@@ -25,6 +25,8 @@ services:
         generateValue: true
       - key: ALLOW_VERCEL_PREVIEWS
         value: "true"
+      - key: MONGODB_URI
+        sync: false
     disk:
       name: beyond-silence-disk
       mountPath: /opt/render/project/src/backend/data

@@ -34,6 +34,7 @@ Root **`postinstall`** installs `frontend/` and `backend/` dependencies and, on 
 |-----|--------|
 | `ADMIN_PASSWORD` | your login password |
 | `JWT_SECRET` | long random string |
+| `MONGODB_URI` | *(optional)* your MongoDB Atlas connection string — if set, all messages/comments/gallery are stored in MongoDB instead of SQLite |
 | `NODE_ENV` | `production` |
 | `DATA_DIR` | `/opt/render/project/src/backend/data` |
 | `UPLOADS_DIR` | `/opt/render/project/src/backend/data/uploads` |
