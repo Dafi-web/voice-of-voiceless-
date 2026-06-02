@@ -120,8 +120,11 @@ export const api = {
     request(`/api/gallery/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteGallery: (id) => request(`/api/gallery/${id}`, { method: 'DELETE' }),
 
-  getComments: (galleryId) => request(`/api/comments/${galleryId}`).then(asArray),
+  getComments: (galleryId) =>
+    request(`/api/comments/${encodeURIComponent(galleryId)}`).then(asArray),
   postComment: (body) => request('/api/comments', { method: 'POST', body: JSON.stringify(body) }),
+  postAdminComment: (body) =>
+    request('/api/admin/comments', { method: 'POST', body: JSON.stringify(body) }),
   getCommentsAll: () => request('/api/admin/comments').then(asArray),
   patchComment: (id, status) =>
     request(`/api/comments/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),

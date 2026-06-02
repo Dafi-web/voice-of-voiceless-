@@ -8,6 +8,7 @@ import { GALLERY_ITEMS as FALLBACK } from '../data/gallery'
 export default function Gallery() {
   const [items, setItems] = useState(FALLBACK)
   const [active, setActive] = useState(null)
+  const [commentsRefreshKey, setCommentsRefreshKey] = useState(0)
   const loadGallery = () => {
     const fallbackById = Object.fromEntries(FALLBACK.map((item) => [item.id, item.fallback]))
 
@@ -30,7 +31,10 @@ export default function Gallery() {
     loadGallery()
   }, [])
 
-  const refreshCounts = () => loadGallery()
+  const refreshCounts = () => {
+    loadGallery()
+    setCommentsRefreshKey((k) => k + 1)
+  }
 
   const close = () => setActive(null)
   const showPrev = () =>
@@ -102,7 +106,12 @@ export default function Gallery() {
                 )}
               </cite>
             </figcaption>
-            <ImageComments imageId={entry.id} compact onPosted={refreshCounts} />
+            <ImageComments
+              imageId={entry.id}
+              compact
+              refreshKey={commentsRefreshKey}
+              onPosted={refreshCounts}
+            />
           </li>
         ))}
       </ul>
@@ -142,7 +151,11 @@ export default function Gallery() {
                   </a>
                 )}
               </div>
-              <ImageComments imageId={item.id} onPosted={refreshCounts} />
+              <ImageComments
+                imageId={item.id}
+                refreshKey={commentsRefreshKey}
+                onPosted={refreshCounts}
+              />
             </div>
             <button type="button" className="lightbox__nav lightbox__nav--next" onClick={showNext} aria-label="Next">
               ›

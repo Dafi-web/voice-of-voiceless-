@@ -173,29 +173,64 @@ app.get('/api/comments/:galleryId', async (req, res) => {
 })
 
 app.post('/api/comments', async (req, res) => {
-  const { galleryId, name, text } = req.body
-  if (!galleryId || !text?.trim()) {
-    return res.status(400).json({ error: 'galleryId and text required' })
+  try {
+    const { galleryId, name, text } = req.body
+    if (!galleryId || !text?.trim()) {
+      return res.status(400).json({ error: 'galleryId and text required' })
+    }
+    const gallery = await store.getGalleryById(galleryId)
+    if (!gallery) return res.status(404).json({ error: 'Gallery item not found' })
+
+    const id = randomUUID()
+    const created_at = new Date().toISOString()
+    await store.insertComment({
+      id,
+      gallery_id: galleryId,
+      name: (name || 'Anonymous').trim(),
+      text: text.trim(),
+      status: 'pending',
+      created_at,
+    })
+
+    res.status(201).json({
+      id,
+      message: 'Comment submitted for review. It will appear after admin approval.',
+      pending: true,
+    })
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not save comment' })
   }
-  const gallery = await store.getGalleryById(galleryId)
-  if (!gallery) return res.status(404).json({ error: 'Gallery item not found' })
+})
 
-  const id = randomUUID()
-  const created_at = new Date().toISOString()
-  await store.insertComment({
-    id,
-    gallery_id: galleryId,
-    name: (name || 'Anonymous').trim(),
-    text: text.trim(),
-    status: 'pending',
-    created_at,
-  })
+app.post('/api/admin/comments', authMiddleware, async (req, res) => {
+  try {
+    const { galleryId, name, text, status } = req.body
+    if (!galleryId || !text?.trim()) {
+      return res.status(400).json({ error: 'Gallery item and comment text are required' })
+    }
+    const gallery = await store.getGalleryById(galleryId)
+    if (!gallery) return res.status(404).json({ error: 'Gallery item not found' })
 
-  res.status(201).json({
-    id,
-    message: 'Comment submitted for review. Thank you.',
-    pending: true,
-  })
+    const commentStatus = status === 'pending' ? 'pending' : 'approved'
+    const id = randomUUID()
+    const created_at = new Date().toISOString()
+    await store.insertComment({
+      id,
+      gallery_id: galleryId,
+      name: (name || 'Beyond Silence').trim(),
+      text: text.trim(),
+      status: commentStatus,
+      created_at,
+    })
+
+    res.status(201).json({
+      id,
+      status: commentStatus,
+      message: commentStatus === 'approved' ? 'Comment published on gallery.' : 'Comment saved as pending.',
+    })
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not save comment' })
+  }
 })
 
 async function listAllComments(_req, res) {

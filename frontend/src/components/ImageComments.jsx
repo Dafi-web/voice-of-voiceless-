@@ -9,30 +9,44 @@ function formatDate(iso) {
   })
 }
 
-export default function ImageComments({ imageId, compact = false, onPosted }) {
-  const { comments, addComment, loading } = useImageComments(imageId)
+export default function ImageComments({ imageId, compact = false, onPosted, refreshKey = 0 }) {
+  const { comments, addComment, loading, error, refresh } = useImageComments(imageId, refreshKey)
   const [name, setName] = useState('')
   const [text, setText] = useState('')
   const [expanded, setExpanded] = useState(!compact)
   const [pendingMsg, setPendingMsg] = useState('')
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!text.trim()) return
+    if (!text.trim() || !imageId) return
+    setSubmitError('')
+    setPendingMsg('')
+    setSubmitting(true)
     try {
       const result = await addComment(name, text)
       setText('')
-      setPendingMsg(result.message || 'Comment submitted for review.')
+      setPendingMsg(
+        result.message ||
+          'Comment submitted for review. It will appear here after admin approval.',
+      )
       onPosted?.()
     } catch (err) {
-      setPendingMsg(err.message || 'Could not submit. Try again later.')
+      setSubmitError(err.message || 'Could not submit. Try again later.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   if (compact && !expanded) {
+    const label =
+      comments.length === 0
+        ? 'Add a comment'
+        : `${comments.length} comment${comments.length === 1 ? '' : 's'}`
     return (
       <button type="button" className="comments__toggle" onClick={() => setExpanded(true)}>
-        {comments.length === 0 ? 'Add a comment' : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
+        {label}
       </button>
     )
   }
@@ -49,7 +63,22 @@ export default function ImageComments({ imageId, compact = false, onPosted }) {
         Comments {comments.length > 0 && `(${comments.length})`}
       </h4>
 
-      {pendingMsg && <p className="comments__pending">{pendingMsg}</p>}
+      {pendingMsg && (
+        <p className="comments__pending" role="status">
+          {pendingMsg}
+        </p>
+      )}
+
+      {submitError && <p className="comments__error">{submitError}</p>}
+
+      {error && (
+        <p className="comments__error">
+          {error}{' '}
+          <button type="button" className="comments__retry" onClick={refresh}>
+            Retry
+          </button>
+        </p>
+      )}
 
       {loading ? (
         <p className="comments__empty">Loading…</p>
@@ -66,7 +95,11 @@ export default function ImageComments({ imageId, compact = false, onPosted }) {
           ))}
         </ul>
       ) : (
-        <p className="comments__empty">No approved comments yet. Be the first.</p>
+        !pendingMsg && (
+          <p className="comments__empty">
+            No published comments yet. Be the first — your comment is reviewed before it appears.
+          </p>
+        )
       )}
 
       <form className="comments__form" onSubmit={handleSubmit}>
@@ -87,8 +120,8 @@ export default function ImageComments({ imageId, compact = false, onPosted }) {
           required
           maxLength={500}
         />
-        <button type="submit" className="btn btn--primary btn--sm">
-          Post comment
+        <button type="submit" className="btn btn--primary btn--sm" disabled={submitting || !imageId}>
+          {submitting ? 'Sending…' : 'Post comment'}
         </button>
       </form>
     </div>

@@ -175,7 +175,12 @@ export default function Admin() {
           <AdminGallery gallery={gallery} onRefresh={loadAll} onNotice={showNotice} />
         )}
         {tab === 'comments' && (
-          <AdminComments comments={comments} onRefresh={loadAll} onNotice={showNotice} />
+          <AdminComments
+            comments={comments}
+            gallery={gallery}
+            onRefresh={loadAll}
+            onNotice={showNotice}
+          />
         )}
         {tab === 'messages' && (
           <AdminMessages messages={messages} onRefresh={loadAll} onNotice={showNotice} />
@@ -334,23 +339,114 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
   )
 }
 
-function AdminComments({ comments, onRefresh, onNotice }) {
+function AdminComments({ comments, gallery, onRefresh, onNotice }) {
   const list = Array.isArray(comments) ? comments : []
+  const galleryItems = Array.isArray(gallery) ? gallery : []
+  const [postGalleryId, setPostGalleryId] = useState('')
+  const [postName, setPostName] = useState('Beyond Silence')
+  const [postText, setPostText] = useState('')
+  const [postError, setPostError] = useState('')
+  const [posting, setPosting] = useState(false)
+
+  useEffect(() => {
+    if (!postGalleryId && galleryItems[0]?.id) {
+      setPostGalleryId(galleryItems[0].id)
+    }
+  }, [galleryItems, postGalleryId])
+
   const setStatus = async (id, status) => {
-    await api.patchComment(id, status)
-    onNotice(status === 'approved' ? 'Comment approved' : status === 'rejected' ? 'Rejected' : 'Updated')
-    await onRefresh()
+    try {
+      await api.patchComment(id, status)
+      onNotice(status === 'approved' ? 'Comment approved — now visible on gallery' : status === 'rejected' ? 'Rejected' : 'Updated')
+      await onRefresh()
+    } catch (err) {
+      onNotice(err.message || 'Could not update comment')
+    }
   }
 
   const remove = async (id) => {
     if (!confirm('Delete this comment permanently?')) return
-    await api.deleteComment(id)
-    onNotice('Comment deleted')
-    await onRefresh()
+    try {
+      await api.deleteComment(id)
+      onNotice('Comment deleted')
+      await onRefresh()
+    } catch (err) {
+      onNotice(err.message || 'Could not delete comment')
+    }
+  }
+
+  const handlePost = async (e) => {
+    e.preventDefault()
+    setPostError('')
+    if (!postGalleryId || !postText.trim()) {
+      setPostError('Choose a gallery item and enter comment text.')
+      return
+    }
+    setPosting(true)
+    try {
+      await api.postAdminComment({
+        galleryId: postGalleryId,
+        name: postName.trim() || 'Beyond Silence',
+        text: postText.trim(),
+        status: 'approved',
+      })
+      setPostText('')
+      onNotice('Comment published on gallery')
+      await onRefresh()
+    } catch (err) {
+      setPostError(err.message || 'Could not post comment')
+    } finally {
+      setPosting(false)
+    }
   }
 
   return (
     <div className="admin-panel">
+      <h2>Post a comment (admin)</h2>
+      <p className="admin-settings-hint">
+        Admin comments are published immediately on the gallery — no approval needed.
+      </p>
+      <form className="admin-form admin-form--narrow" onSubmit={handlePost}>
+        <label>
+          Gallery item *
+          <select
+            value={postGalleryId}
+            onChange={(e) => setPostGalleryId(e.target.value)}
+            required
+          >
+            {galleryItems.length === 0 && <option value="">No gallery items</option>}
+            {galleryItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.caption?.slice(0, 80) || item.id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Name
+          <input
+            value={postName}
+            onChange={(e) => setPostName(e.target.value)}
+            maxLength={80}
+          />
+        </label>
+        <label>
+          Comment *
+          <textarea
+            value={postText}
+            onChange={(e) => setPostText(e.target.value)}
+            rows={3}
+            required
+            maxLength={500}
+            placeholder="Write a comment to publish on the gallery…"
+          />
+        </label>
+        {postError && <p className="admin-error">{postError}</p>}
+        <button type="submit" className="btn btn--primary" disabled={posting || galleryItems.length === 0}>
+          {posting ? 'Publishing…' : 'Publish comment'}
+        </button>
+      </form>
+
       <h2>User comments ({list.length})</h2>
       {list.length === 0 ? (
         <p className="admin-empty">No comments yet.</p>
