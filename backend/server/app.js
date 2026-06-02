@@ -36,6 +36,23 @@ const upload = multer({
   },
 })
 
+const evidenceUpload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024, files: 5 },
+  fileFilter: (_req, file, cb) => {
+    const ok =
+      file.mimetype.startsWith('image/') ||
+      file.mimetype.startsWith('video/') ||
+      file.mimetype.startsWith('audio/') ||
+      file.mimetype === 'application/pdf' ||
+      file.mimetype.startsWith('text/') ||
+      file.mimetype.includes('document') ||
+      file.mimetype.includes('officedocument') ||
+      file.mimetype === 'application/octet-stream'
+    cb(ok ? null : new Error('File type not allowed for evidence upload'), ok)
+  },
+})
+
 function rowToGallery(row) {
   if (!row) return null
   return {
@@ -203,6 +220,59 @@ app.delete('/api/comments/:id', authMiddleware, async (req, res) => {
   const ok = await store.deleteComment(req.params.id)
   if (!ok) return res.status(404).json({ error: 'Not found' })
   res.json({ ok: true })
+})
+
+app.post('/api/evidence', (req, res, next) => {
+  evidenceUpload.array('files', 5)(req, res, (err) => {
+    if (err) {
+      const msg =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? 'Each file must be 50 MB or smaller'
+          : err.message || 'Upload failed'
+      return res.status(400).json({ error: msg })
+    }
+    next()
+  })
+}, async (req, res) => {
+  try {
+    const evidenceType = (req.body.evidenceType || 'Other').toString().trim()
+    const description = (req.body.description || '').toString().trim()
+    const contact = (req.body.contact || '').toString().trim()
+    const fileNotes = (req.body.fileNotes || '').toString().trim()
+
+    if (!description) {
+      return res.status(400).json({ error: 'Description is required' })
+    }
+
+    const uploaded = (req.files || []).map((f) => `/uploads/${f.filename}`)
+    const bodyParts = [
+      description,
+      fileNotes && `Notes about files:\n${fileNotes}`,
+      uploaded.length > 0 && `Uploaded files:\n${uploaded.join('\n')}`,
+    ].filter(Boolean)
+
+    const id = randomUUID()
+    await store.insertMessage({
+      id,
+      name: contact ? 'Evidence submitter' : 'Anonymous',
+      email: contact || 'anonymous@beyond-silence.local',
+      subject: `Evidence submission: ${evidenceType}`,
+      body: bodyParts.join('\n\n'),
+      type: 'evidence',
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    })
+
+    res.status(201).json({
+      id,
+      message: uploaded.length
+        ? `Evidence received with ${uploaded.length} file(s). Thank you.`
+        : 'Evidence received. Thank you.',
+      files: uploaded,
+    })
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not save evidence' })
+  }
 })
 
 app.post('/api/messages', async (req, res) => {

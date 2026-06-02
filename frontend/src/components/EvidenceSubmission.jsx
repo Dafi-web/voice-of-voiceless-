@@ -34,7 +34,8 @@ const EVIDENCE_TYPES = [
 const STEPS = [
   { num: 1, title: 'Choose type', text: 'Select what kind of material you are submitting.' },
   { num: 2, title: 'Describe it', text: 'Include dates, places, and context when you can.' },
-  { num: 3, title: 'Send securely', text: 'Optional email for follow-up — or stay anonymous.' },
+  { num: 3, title: 'Upload files', text: 'Photos, videos, PDFs, or documents (optional, up to 5 files).' },
+  { num: 4, title: 'Send securely', text: 'Optional email for follow-up — or stay anonymous.' },
 ]
 
 export default function EvidenceSubmission() {
@@ -42,37 +43,62 @@ export default function EvidenceSubmission() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [evidenceType, setEvidenceType] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState([])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    if (!evidenceType) {
+      setError('Please choose a type of evidence.')
+      return
+    }
+
     const fd = new FormData(e.target)
-    const type = evidenceType || (fd.get('evidence-type') || 'Other').toString()
     const description = (fd.get('evidence-description') || '').toString().trim()
     const contact = (fd.get('evidence-contact') || '').toString().trim()
-    const files = (fd.get('evidence-files') || '').toString().trim()
+    const fileNotes = (fd.get('evidence-files-note') || '').toString().trim()
 
-    const body = [description, files && `\nFiles / secure transfer notes:\n${files}`]
-      .filter(Boolean)
-      .join('\n')
+    if (!description) {
+      setError('Please add a description of the evidence.')
+      return
+    }
 
+    const payload = new FormData()
+    payload.append('evidenceType', evidenceType)
+    payload.append('description', description)
+    if (contact) payload.append('contact', contact)
+    if (fileNotes) payload.append('fileNotes', fileNotes)
+    for (const file of selectedFiles) {
+      payload.append('files', file)
+    }
+
+    setLoading(true)
     try {
-      await api.postMessage({
-        name: contact ? 'Evidence submitter' : 'Anonymous',
-        email: contact || 'anonymous@beyond-silence.local',
-        subject: `Evidence submission: ${type}`,
-        body,
-        type: 'evidence',
-      })
+      const result = await api.postEvidence(payload)
       setSubmitted(true)
       setEvidenceType('')
+      setSelectedFiles([])
       e.target.reset()
+      if (result?.message) {
+        /* success message shown in UI */
+      }
     } catch (err) {
-      setError(err.message || 'Could not send. Please try the contact form below.')
+      setError(err.message || 'Could not send. Please try again or use the contact form below.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const onFilesChange = (e) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length > 5) {
+      setError('You can upload up to 5 files at a time.')
+      setSelectedFiles(files.slice(0, 5))
+      return
+    }
+    setError('')
+    setSelectedFiles(files)
   }
 
   return (
@@ -90,8 +116,8 @@ export default function EvidenceSubmission() {
             </div>
             <h3 className="evidence-success__title">Thank you — we received your submission</h3>
             <p className="evidence-success__text">
-              The team will review it carefully. Large files should be shared only through a secure
-              channel we agree with you — do not send classified material through this form.
+              The admin team will review your evidence and any files you uploaded. We do not publish
+              material without verification and consent.
             </p>
             <button
               type="button"
@@ -120,12 +146,12 @@ export default function EvidenceSubmission() {
               </div>
 
               <div className="evidence-aside__card evidence-aside__card--muted">
-                <h3 className="evidence-aside__heading">What to include</h3>
+                <h3 className="evidence-aside__heading">What you can upload</h3>
                 <ul className="evidence-checklist">
-                  <li>What happened, and when / where (if known)</li>
-                  <li>Who was involved, if safe to name</li>
-                  <li>How you obtained the material</li>
-                  <li>Any files you can share through a secure channel</li>
+                  <li>Photos and videos (JPG, PNG, MP4, etc.)</li>
+                  <li>PDF documents and reports</li>
+                  <li>Text files and official records</li>
+                  <li>Up to 5 files, 50 MB each</li>
                 </ul>
               </div>
 
@@ -135,11 +161,14 @@ export default function EvidenceSubmission() {
               </p>
             </aside>
 
-            <form className="evidence-form" onSubmit={handleSubmit}>
+            <form className="evidence-form" onSubmit={handleSubmit} encType="multipart/form-data">
               <fieldset className="evidence-form__block">
                 <legend className="evidence-form__legend">
                   1. Type of evidence <span className="evidence-form__required">*</span>
                 </legend>
+                {!evidenceType && error === 'Please choose a type of evidence.' && (
+                  <p className="evidence-form__error">{error}</p>
+                )}
                 <div className="evidence-types" role="radiogroup" aria-label="Type of evidence">
                   {EVIDENCE_TYPES.map((type) => (
                     <label
@@ -152,7 +181,6 @@ export default function EvidenceSubmission() {
                         value={type.id}
                         checked={evidenceType === type.id}
                         onChange={() => setEvidenceType(type.id)}
-                        required
                       />
                       <span className="evidence-type__label">{type.label}</span>
                       <span className="evidence-type__desc">{type.desc}</span>
@@ -181,18 +209,38 @@ export default function EvidenceSubmission() {
 
               <div className="evidence-form__block">
                 <label className="evidence-form__legend" htmlFor="evidence-files">
-                  3. Files &amp; secure transfer
+                  3. Upload files <span className="evidence-form__optional">(optional)</span>
                 </label>
                 <p className="evidence-form__hint">
-                  List file names or describe material you can send separately (encrypted email, secure
-                  drive, etc.). Do not paste sensitive content here if you need stronger protection.
+                  Photos, videos, PDFs, or documents. Maximum 5 files, 50 MB each.
                 </p>
-                <textarea
+                <input
                   id="evidence-files"
                   name="evidence-files"
+                  type="file"
+                  className="evidence-form__file"
+                  accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,application/pdf"
+                  multiple
+                  onChange={onFilesChange}
+                />
+                {selectedFiles.length > 0 && (
+                  <ul className="evidence-file-list">
+                    {selectedFiles.map((f) => (
+                      <li key={`${f.name}-${f.size}`}>
+                        {f.name} ({Math.round(f.size / 1024)} KB)
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <label className="evidence-form__legend evidence-form__legend--sub" htmlFor="evidence-files-note">
+                  Notes about files <span className="evidence-form__optional">(optional)</span>
+                </label>
+                <textarea
+                  id="evidence-files-note"
+                  name="evidence-files-note"
                   className="evidence-form__textarea evidence-form__textarea--sm"
-                  rows={3}
-                  placeholder="e.g. “I have 3 photos and a PDF — can share via Signal.”"
+                  rows={2}
+                  placeholder="e.g. date taken, location, or context for the files above"
                 />
               </div>
 
@@ -211,10 +259,12 @@ export default function EvidenceSubmission() {
                 />
               </div>
 
-              {error && <p className="evidence-form__error">{error}</p>}
+              {error && error !== 'Please choose a type of evidence.' && (
+                <p className="evidence-form__error">{error}</p>
+              )}
 
               <button type="submit" className="btn btn--primary evidence-form__submit" disabled={loading}>
-                {loading ? 'Sending…' : 'Submit evidence securely'}
+                {loading ? 'Uploading…' : 'Submit evidence securely'}
               </button>
             </form>
           </div>

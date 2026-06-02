@@ -128,6 +128,7 @@ export const api = {
   deleteComment: (id) => request(`/api/comments/${id}`, { method: 'DELETE' }),
 
   postMessage: (body) => request('/api/messages', { method: 'POST', body: JSON.stringify(body) }),
+  postEvidence: (formData) => request('/api/evidence', { method: 'POST', body: formData }),
   getMessages: () => request('/api/admin/messages').then(asArray),
   patchMessage: (id, status) =>
     request(`/api/messages/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),

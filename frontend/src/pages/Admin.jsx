@@ -398,6 +398,37 @@ function AdminComments({ comments, onRefresh, onNotice }) {
   )
 }
 
+function MessageBody({ body }) {
+  if (!body) return null
+  const lines = body.split('\n')
+  return (
+    <div className="admin-card__body">
+      {lines.map((line, i) => {
+        const uploadMatch = line.match(/^(\/uploads\/.+)$/)
+        if (uploadMatch) {
+          const href = mediaUrl(uploadMatch[1])
+          const name = uploadMatch[1].split('/').pop()
+          return (
+            <p key={`${i}-${line}`}>
+              <a href={href} target="_blank" rel="noopener noreferrer">
+                {name}
+              </a>
+            </p>
+          )
+        }
+        if (line.startsWith('Uploaded files:') || line.startsWith('Notes about files:')) {
+          return (
+            <p key={`${i}-${line}`}>
+              <strong>{line}</strong>
+            </p>
+          )
+        }
+        return line ? <p key={`${i}-${line}`}>{line}</p> : <br key={`${i}-br`} />
+      })}
+    </div>
+  )
+}
+
 function AdminMessages({ messages, onRefresh, onNotice }) {
   const list = Array.isArray(messages) ? messages : []
   const setStatus = async (id, status) => {
@@ -430,7 +461,7 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
               <p className="admin-card__meta">
                 <a href={`mailto:${m.email}`}>{m.email}</a> · {m.subject}
               </p>
-              <p>{m.body}</p>
+              <MessageBody body={m.body} />
               <time>{new Date(m.created_at).toLocaleString()}</time>
               <div className="admin-card__actions">
                 {m.status === 'pending' && (
