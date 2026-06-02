@@ -56,12 +56,12 @@ export default function ShareStory() {
     <Section
       id="stories"
       title="Share your story"
-      subtitle="Survivors of sexual violence in Tigray deserve to be heard. You choose how much to share and whether your name appears."
+      subtitle="Survivors of sexual violence during and after war in Tigray deserve to be heard. You choose how much to share and whether your name appears."
       alt
     >
       <ContentWarning>
-        This section discusses wartime sexual violence. Only proceed if you feel able. You may stop at
-        any time.
+        This section discusses sexual violence during and after war. Only proceed if you feel able. You
+        may stop at any time.
       </ContentWarning>
 
       {submitted ? (
