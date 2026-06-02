@@ -103,7 +103,7 @@ If the build succeeds but deploy fails with **“No Output Directory named dist�
 
 | Key | Value |
 |-----|--------|
-| `VITE_API_URL` | `https://your-backend.onrender.com` (no trailing slash) |
+| `VITE_API_URL` | `https://voice-of-voiceless-1.onrender.com` (no trailing slash) |
 
 Redeploy after saving. The build generates `vercel.json` rewrites so `/api/*` and `/uploads/*` forward to Render. Without this variable, the contact form hits Vercel and returns **405 Method Not Allowed**.
 
@@ -111,12 +111,8 @@ Redeploy after saving. The build generates `vercel.json` rewrites so `/api/*` an
 
 | Key | Value |
 |-----|--------|
-| `ALLOWED_ORIGIN` | `https://voice-of-voiceless-smoky.vercel.app` (your **current** Vercel URL) |
-
-Multiple sites: comma-separated `ALLOWED_ORIGINS`.  
-All Vercel previews: set `ALLOW_VERCEL_PREVIEWS=true` instead of listing every preview URL.
-
-If you see CORS errors mentioning `voice-of-voiceless-alpha.vercel.app` while using `smoky`, update `ALLOWED_ORIGIN` on Render and redeploy — an old preview URL was saved there.
+| `ALLOWED_ORIGINS` | `https://www.beyondsilence.community,https://beyondsilence.community` |
+| `SITE_URL` | same as above (also allows CORS for your custom domain) |
 
 ---
 

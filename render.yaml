@@ -25,6 +25,8 @@ services:
         generateValue: true
       - key: ALLOW_VERCEL_PREVIEWS
         value: "true"
+      - key: SITE_URL
+        value: https://www.beyondsilence.community,https://beyondsilence.community
       - key: MONGODB_URI
         sync: false
     disk:
