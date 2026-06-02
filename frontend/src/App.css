@@ -848,13 +848,6 @@
   text-decoration: underline;
   cursor: pointer;
 }
-  font-size: 0.85rem;
-  color: var(--color-gold-light);
-  margin: 0 0 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(240, 198, 116, 0.15);
-  border-radius: var(--radius);
-}
 
 @media (max-width: 768px) {
   .contact-layout {
