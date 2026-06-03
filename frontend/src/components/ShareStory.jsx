@@ -2,9 +2,11 @@ import { useState } from 'react'
 import Section from './Section'
 import ContentWarning from './ContentWarning'
 import FormField from './FormField'
+import { useLanguage } from '../i18n/LanguageContext'
 import { api } from '../api/client'
 
 export default function ShareStory() {
+  const { t } = useLanguage()
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -46,58 +48,47 @@ export default function ShareStory() {
       setSubmitted(true)
       e.target.reset()
     } catch (err) {
-      setError(err.message || 'Could not send. Please try again or use the contact form.')
+      setError(err.message || t('shareStory.error'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Section
-      id="stories"
-      title="Share your story"
-      subtitle="Survivors of sexual violence during and after war in Tigray deserve to be heard. You choose how much to share and whether your name appears."
-      alt
-    >
-      <ContentWarning>
-        This section discusses sexual violence during and after war. Only proceed if you feel able. You
-        may stop at any time.
-      </ContentWarning>
+    <Section id="stories" title={t('shareStory.title')} subtitle={t('shareStory.subtitle')} alt>
+      <ContentWarning>{t('shareStory.warning')}</ContentWarning>
 
       {submitted ? (
         <div className="message message--success" role="status">
-          <p>
-            Thank you. Your testimony was sent securely to the admin team for review. It will not be
-            published without your consent.
-          </p>
+          <p>{t('shareStory.success')}</p>
         </div>
       ) : (
         <form className="form" onSubmit={handleSubmit}>
-          <FormField id="story-anonymous" label="Publication preference">
+          <FormField id="story-anonymous" label={t('shareStory.publication')}>
             <select id="story-anonymous" name="story-anonymous" className="form-field__input" defaultValue="anonymous">
-              <option value="anonymous">Anonymous — do not publish my name</option>
-              <option value="pseudonym">Use a pseudonym only</option>
-              <option value="named">I consent to using my real name</option>
+              <option value="anonymous">{t('shareStory.optAnonymous')}</option>
+              <option value="pseudonym">{t('shareStory.optPseudonym')}</option>
+              <option value="named">{t('shareStory.optNamed')}</option>
             </select>
           </FormField>
 
           <FormField
             id="story-pseudonym"
-            label="Pseudonym (if applicable)"
-            hint="Only used if you selected pseudonym above."
+            label={t('shareStory.pseudonym')}
+            hint={t('shareStory.pseudonymHint')}
           />
 
           <FormField
             id="story-location"
-            label="Approximate location and time period"
-            hint="e.g. town, year — only what you are comfortable sharing."
+            label={t('shareStory.location')}
+            hint={t('shareStory.locationHint')}
           />
 
           <FormField
             id="story-text"
-            label="Your testimony"
+            label={t('shareStory.testimony')}
             required
-            hint="Write in your own words. There is no minimum length."
+            hint={t('shareStory.testimonyHint')}
           >
             <textarea
               id="story-text"
@@ -108,19 +99,16 @@ export default function ShareStory() {
             />
           </FormField>
 
-          <FormField id="story-consent" label="Consent">
+          <FormField id="story-consent" label={t('shareStory.consent')}>
             <label className="checkbox">
               <input type="checkbox" id="story-consent" name="story-consent" required />
-              <span>
-                I understand this testimony may be reviewed for documentation and potential legal use,
-                and I consent to secure handling of my submission.
-              </span>
+              <span>{t('shareStory.consentText')}</span>
             </label>
           </FormField>
 
           {error && <p className="contact-form__error">{error}</p>}
           <button type="submit" className="btn btn--primary" disabled={loading}>
-            {loading ? 'Sending…' : 'Submit testimony'}
+            {loading ? t('shareStory.sending') : t('shareStory.submit')}
           </button>
         </form>
       )}

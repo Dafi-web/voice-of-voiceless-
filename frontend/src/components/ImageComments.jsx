@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useImageComments } from '../hooks/useImageComments'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -10,11 +11,12 @@ function formatDate(iso) {
 }
 
 export default function ImageComments({ imageId, compact = false, onPosted, refreshKey = 0 }) {
+  const { t } = useLanguage()
   const { comments, addComment, loading, error, refresh } = useImageComments(imageId, refreshKey)
   const [name, setName] = useState('')
   const [text, setText] = useState('')
   const [expanded, setExpanded] = useState(!compact)
-  const [pendingMsg, setPendingMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -22,18 +24,15 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
     e.preventDefault()
     if (!text.trim() || !imageId) return
     setSubmitError('')
-    setPendingMsg('')
+    setSuccessMsg('')
     setSubmitting(true)
     try {
       const result = await addComment(name, text)
       setText('')
-      setPendingMsg(
-        result.message ||
-          'Comment submitted for review. It will appear here after admin approval.',
-      )
+      setSuccessMsg(result.message || t('comments.posted'))
       onPosted?.()
     } catch (err) {
-      setSubmitError(err.message || 'Could not submit. Try again later.')
+      setSubmitError(err.message || t('comments.submitError'))
     } finally {
       setSubmitting(false)
     }
@@ -42,8 +41,10 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
   if (compact && !expanded) {
     const label =
       comments.length === 0
-        ? 'Add a comment'
-        : `${comments.length} comment${comments.length === 1 ? '' : 's'}`
+        ? t('comments.add')
+        : comments.length === 1
+          ? t('comments.count', { n: comments.length })
+          : t('comments.countPlural', { n: comments.length })
     return (
       <button type="button" className="comments__toggle" onClick={() => setExpanded(true)}>
         {label}
@@ -55,17 +56,17 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
     <div className={`comments ${compact ? 'comments--compact' : ''}`}>
       {compact && (
         <button type="button" className="comments__collapse" onClick={() => setExpanded(false)}>
-          Hide comments
+          {t('comments.hide')}
         </button>
       )}
 
       <h4 className="comments__heading">
-        Comments {comments.length > 0 && `(${comments.length})`}
+        {t('comments.heading')} {comments.length > 0 && `(${comments.length})`}
       </h4>
 
-      {pendingMsg && (
+      {successMsg && (
         <p className="comments__pending" role="status">
-          {pendingMsg}
+          {successMsg}
         </p>
       )}
 
@@ -75,13 +76,13 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
         <p className="comments__error">
           {error}{' '}
           <button type="button" className="comments__retry" onClick={refresh}>
-            Retry
+            {t('comments.retry')}
           </button>
         </p>
       )}
 
       {loading ? (
-        <p className="comments__empty">Loading…</p>
+        <p className="comments__empty">{t('comments.loading')}</p>
       ) : comments.length > 0 ? (
         <ul className="comments__list">
           {comments.map(({ id, name: author, text: body, date }) => (
@@ -95,25 +96,21 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
           ))}
         </ul>
       ) : (
-        !pendingMsg && (
-          <p className="comments__empty">
-            No published comments yet. Be the first — your comment is reviewed before it appears.
-          </p>
-        )
+        !successMsg && <p className="comments__empty">{t('comments.empty')}</p>
       )}
 
       <form className="comments__form" onSubmit={handleSubmit}>
         <input
           type="text"
           className="comments__input"
-          placeholder="Your name (optional)"
+          placeholder={t('comments.namePlaceholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={80}
         />
         <textarea
           className="comments__textarea"
-          placeholder="Share your thoughts… (reviewed before publishing)"
+          placeholder={t('comments.textPlaceholder')}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={compact ? 2 : 3}
@@ -121,7 +118,7 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
           maxLength={500}
         />
         <button type="submit" className="btn btn--primary btn--sm" disabled={submitting || !imageId}>
-          {submitting ? 'Sending…' : 'Post comment'}
+          {submitting ? t('comments.sending') : t('comments.post')}
         </button>
       </form>
     </div>

@@ -49,9 +49,10 @@ export function useImageComments(imageId, refreshKey = 0) {
         name: name.trim() || 'Anonymous',
         text: text.trim(),
       })
+      await refresh()
       return result
     },
-    [imageId],
+    [imageId, refresh],
   )
 
   return { comments, addComment, loading, error, refresh }

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Section from './Section'
 import { SITE_EMAIL } from '../constants/brand'
+import { useLanguage } from '../i18n/LanguageContext'
 import { api } from '../api/client'
 
 export default function Contact() {
+  const { t } = useLanguage()
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -27,24 +29,17 @@ export default function Contact() {
       setStatus({ ok: true, text: result.message })
       setForm({ name: '', email: '', subject: '', body: '', type: 'contact' })
     } catch (err) {
-      setStatus({ ok: false, text: err.message || 'Failed to send. Please try again.' })
+      setStatus({ ok: false, text: err.message || t('contact.error') })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Section
-      id="contact"
-      title="Get in touch"
-      subtitle="Send a message, tip, or request. Rahwa reviews every submission."
-      dark
-    >
+    <Section id="contact" title={t('contact.title')} subtitle={t('contact.subtitle')} dark>
       <div className="contact-layout">
         <div className="contact-card">
-          <p className="contact-card__text">
-            Every message helps build the record. We treat sensitive information with care.
-          </p>
+          <p className="contact-card__text">{t('contact.cardText')}</p>
           <a href={`mailto:${SITE_EMAIL}`} className="contact-card__email">
             {SITE_EMAIL}
           </a>
@@ -52,26 +47,26 @@ export default function Contact() {
 
         <form className="contact-form" onSubmit={handleSubmit}>
           <label>
-            Name *
+            {t('contact.name')}
             <input name="name" value={form.name} onChange={handleChange} required />
           </label>
           <label>
-            Email *
+            {t('contact.email')}
             <input name="email" type="email" value={form.email} onChange={handleChange} required />
           </label>
           <label>
-            Type
+            {t('contact.type')}
             <select name="type" value={form.type} onChange={handleChange}>
-              <option value="contact">General message</option>
-              <option value="request">Request / report</option>
+              <option value="contact">{t('contact.typeContact')}</option>
+              <option value="request">{t('contact.typeRequest')}</option>
             </select>
           </label>
           <label>
-            Subject *
+            {t('contact.subject')}
             <input name="subject" value={form.subject} onChange={handleChange} required />
           </label>
           <label>
-            Message *
+            {t('contact.message')}
             <textarea name="body" rows={5} value={form.body} onChange={handleChange} required />
           </label>
           {status && (
@@ -80,7 +75,7 @@ export default function Contact() {
             </p>
           )}
           <button type="submit" className="btn btn--primary" disabled={loading}>
-            {loading ? 'Sending…' : 'Send message'}
+            {loading ? t('contact.sending') : t('contact.send')}
           </button>
         </form>
       </div>

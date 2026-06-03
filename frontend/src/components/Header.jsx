@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react'
 import Logo from './Logo'
-
-const NAV = [
-  { href: '#about', label: 'About' },
-  { href: '#truth', label: 'The truth' },
-  { href: '#gallery', label: 'Gallery' },
-  { href: '#stories', label: 'Share story' },
-  { href: '#evidence', label: 'Evidence' },
-  { href: '#contact', label: 'Contact' },
-]
+import LanguageSwitcher from './LanguageSwitcher'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export default function Header() {
+  const { t } = useLanguage()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
+
+  const NAV = [
+    { href: '#about', label: t('nav.about') },
+    { href: '#truth', label: t('nav.truth') },
+    { href: '#gallery', label: t('nav.gallery') },
+    { href: '#stories', label: t('nav.stories') },
+    { href: '#evidence', label: t('nav.evidence') },
+    { href: '#contact', label: t('nav.contact') },
+  ]
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -35,7 +38,7 @@ export default function Header() {
           aria-controls="site-nav"
           onClick={() => setOpen((v) => !v)}
         >
-          <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+          <span className="sr-only">{open ? t('nav.closeMenu') : t('nav.openMenu')}</span>
           <span className={`header__burger ${open ? 'is-open' : ''}`} />
         </button>
 
@@ -47,8 +50,9 @@ export default function Header() {
               </li>
             ))}
           </ul>
+          <LanguageSwitcher />
           <a href="#contact" className="btn btn--primary btn--sm">
-            Speak up
+            {t('nav.speakUp')}
           </a>
         </nav>
       </div>
@@ -57,7 +61,7 @@ export default function Header() {
         <button
           type="button"
           className="header__backdrop"
-          aria-label="Close menu"
+          aria-label={t('nav.closeMenu')}
           onClick={close}
         />
       )}
@@ -77,8 +81,9 @@ export default function Header() {
             </li>
           ))}
         </ul>
+        <LanguageSwitcher className="lang-switch--mobile" />
         <a href="#contact" className="btn btn--primary header__cta" onClick={close}>
-          Speak up
+          {t('nav.speakUp')}
         </a>
       </nav>
     </header>

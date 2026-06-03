@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import Section from './Section'
 import GalleryImage from './GalleryImage'
 import ImageComments from './ImageComments'
+import { useLanguage } from '../i18n/LanguageContext'
 import { api, mediaUrl } from '../api/client'
 import { GALLERY_ITEMS as FALLBACK } from '../data/gallery'
 
 export default function Gallery() {
+  const { t } = useLanguage()
   const [items, setItems] = useState(FALLBACK)
   const [active, setActive] = useState(null)
   const [commentsRefreshKey, setCommentsRefreshKey] = useState(0)
@@ -63,13 +65,11 @@ export default function Gallery() {
   return (
     <Section
       id="gallery"
-      title="Evidence gallery"
-      subtitle="Photographs and videos — proof the world cannot ignore. Leave a comment on any item."
+      title={t('gallery.title')}
+      subtitle={t('gallery.subtitle')}
       wide
     >
-      <p className="gallery__warning">
-        These images depict war injuries and trauma. Viewer discretion advised.
-      </p>
+      <p className="gallery__warning">{t('gallery.warning')}</p>
 
       <ul className="gallery__grid">
         {items.map((entry, index) => (
@@ -89,8 +89,8 @@ export default function Gallery() {
                   alt={entry.caption}
                 />
               )}
-              {entry.type === 'video' && <span className="gallery__badge">Video</span>}
-              {entry.isArticle && <span className="gallery__badge">Read report</span>}
+              {entry.type === 'video' && <span className="gallery__badge">{t('gallery.video')}</span>}
+              {entry.isArticle && <span className="gallery__badge">{t('gallery.readReport')}</span>}
             </button>
             <figcaption className="gallery__caption">
               <p>{entry.caption}</p>
@@ -100,7 +100,7 @@ export default function Gallery() {
                   <>
                     {' · '}
                     <a href={entry.link} target="_blank" rel="noopener noreferrer">
-                      Source
+                      {t('gallery.source')}
                     </a>
                   </>
                 )}
@@ -121,14 +121,14 @@ export default function Gallery() {
           className="lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label="Media viewer"
+          aria-label={t('gallery.mediaViewer')}
           onClick={close}
         >
           <div className="lightbox__inner lightbox__inner--with-comments" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="lightbox__close" onClick={close} aria-label="Close">
+            <button type="button" className="lightbox__close" onClick={close} aria-label={t('gallery.close')}>
               ×
             </button>
-            <button type="button" className="lightbox__nav lightbox__nav--prev" onClick={showPrev} aria-label="Previous">
+            <button type="button" className="lightbox__nav lightbox__nav--prev" onClick={showPrev} aria-label={t('gallery.previous')}>
               ‹
             </button>
             <div className="lightbox__media">
@@ -147,7 +147,7 @@ export default function Gallery() {
                 <cite>{item.credit}</cite>
                 {item.link && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="lightbox__link">
-                    View source →
+                    {t('gallery.viewSource')}
                   </a>
                 )}
               </div>
@@ -157,7 +157,7 @@ export default function Gallery() {
                 onPosted={refreshCounts}
               />
             </div>
-            <button type="button" className="lightbox__nav lightbox__nav--next" onClick={showNext} aria-label="Next">
+            <button type="button" className="lightbox__nav lightbox__nav--next" onClick={showNext} aria-label={t('gallery.next')}>
               ›
             </button>
           </div>

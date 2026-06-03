@@ -188,14 +188,14 @@ app.post('/api/comments', async (req, res) => {
       gallery_id: galleryId,
       name: (name || 'Anonymous').trim(),
       text: text.trim(),
-      status: 'pending',
+      status: 'approved',
       created_at,
     })
 
     res.status(201).json({
       id,
-      message: 'Comment submitted for review. It will appear after admin approval.',
-      pending: true,
+      message: 'Comment posted.',
+      pending: false,
     })
   } catch (e) {
     res.status(500).json({ error: e.message || 'Could not save comment' })

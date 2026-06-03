@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import PublicSite from './pages/PublicSite'
 import Admin from './pages/Admin'
+import { LanguageProvider } from './i18n/LanguageContext'
 import './index.css'
 import './App.css'
 
@@ -11,7 +12,14 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/admin" element={<Admin />} />
-        <Route path="/*" element={<PublicSite />} />
+        <Route
+          path="/*"
+          element={
+            <LanguageProvider>
+              <PublicSite />
+            </LanguageProvider>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

@@ -140,7 +140,7 @@
 .header__nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .header__links {
@@ -161,6 +161,36 @@
 
 .header__links a:hover {
   color: var(--color-accent);
+}
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+}
+
+.lang-switch__select {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.lang-switch__select:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.lang-switch--mobile {
+  margin: 0.75rem 0;
+  width: 100%;
+}
+
+.lang-switch--mobile .lang-switch__select {
+  width: 100%;
 }
 
 .header__menu-btn {
