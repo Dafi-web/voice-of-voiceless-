@@ -15,6 +15,19 @@ if (isServerless && !fs.existsSync(dbPath)) {
 
 const db = new Database(dbPath)
 db.pragma('journal_mode = WAL')
+if (process.env.NODE_ENV === 'production') {
+  db.pragma('synchronous = FULL')
+}
+
+export function flushDb() {
+  try {
+    db.pragma('wal_checkpoint(TRUNCATE)')
+  } catch {
+    /* best-effort */
+  }
+}
+
+export { dbPath }
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS gallery (

@@ -1,4 +1,4 @@
-import db from '../db.js'
+import db, { flushDb } from '../db.js'
 
 export const name = 'sqlite'
 
@@ -43,6 +43,7 @@ export function insertGallery(row) {
     row.published,
     row.created_at,
   )
+  flushDb()
 }
 
 export function updateGallery(id, fields) {
@@ -91,6 +92,7 @@ export function insertComment(row) {
   db.prepare(
     `INSERT INTO comments (id, gallery_id, name, text, status, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
   ).run(row.id, row.gallery_id, row.name, row.text, row.status, row.created_at)
+  flushDb()
 }
 
 export function updateCommentStatus(id, status) {

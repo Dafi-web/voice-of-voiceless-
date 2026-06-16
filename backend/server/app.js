@@ -4,7 +4,8 @@ import { createCorsOptions } from './cors.js'
 import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
-import { uploadsDir, isServerless, ensureDirs, frontendDist } from './paths.js'
+import { uploadsDir, isServerless, ensureDirs, frontendDist, dataDir } from './paths.js'
+import { dbPath } from './db.js'
 import { randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 import { store, storeBackend, mongoConfigured, mongoError } from './store/index.js'
@@ -76,6 +77,9 @@ app.get('/api/health', (_req, res) => {
     mongoConfigured,
     mongoConnected: storeBackend === 'mongodb',
     mongoError: mongoError || undefined,
+    dataDir,
+    dbPath: storeBackend === 'sqlite' ? dbPath : undefined,
+    persistentStorage: storeBackend === 'mongodb' || Boolean(process.env.DATA_DIR),
   })
 })
 
@@ -196,6 +200,12 @@ app.post('/api/comments', async (req, res) => {
       id,
       message: 'Comment posted.',
       pending: false,
+      comment: {
+        id,
+        name: (name || 'Anonymous').trim(),
+        text: text.trim(),
+        date: created_at,
+      },
     })
   } catch (e) {
     res.status(500).json({ error: e.message || 'Could not save comment' })
@@ -227,6 +237,12 @@ app.post('/api/admin/comments', authMiddleware, async (req, res) => {
       id,
       status: commentStatus,
       message: commentStatus === 'approved' ? 'Comment published on gallery.' : 'Comment saved as pending.',
+      comment: {
+        id,
+        name: (name || 'Beyond Silence').trim(),
+        text: text.trim(),
+        date: created_at,
+      },
     })
   } catch (e) {
     res.status(500).json({ error: e.message || 'Could not save comment' })

@@ -1,27 +1,31 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../api/client'
 
 export function useImageComments(imageId, refreshKey = 0) {
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const loadedOnce = useRef(false)
 
   const refresh = useCallback(() => {
     if (!imageId) {
       setComments([])
       setLoading(false)
-      return
+      return Promise.resolve([])
     }
     setLoading(true)
     setError('')
-    api
+    return api
       .getComments(imageId)
       .then((rows) => {
-        setComments(Array.isArray(rows) ? rows : [])
+        const list = Array.isArray(rows) ? rows : []
+        setComments(list)
+        loadedOnce.current = true
+        return list
       })
       .catch((err) => {
-        setComments([])
         setError(err.message || 'Could not load comments')
+        return null
       })
       .finally(() => setLoading(false))
   }, [imageId])
@@ -31,12 +35,16 @@ export function useImageComments(imageId, refreshKey = 0) {
   }, [refresh, refreshKey])
 
   useEffect(() => {
+    let timer
     const reload = () => {
-      if (document.visibilityState === 'visible') refresh()
+      if (document.visibilityState !== 'visible') return
+      clearTimeout(timer)
+      timer = setTimeout(() => refresh(), 400)
     }
     document.addEventListener('visibilitychange', reload)
     window.addEventListener('focus', reload)
     return () => {
+      clearTimeout(timer)
       document.removeEventListener('visibilitychange', reload)
       window.removeEventListener('focus', reload)
     }
@@ -49,7 +57,16 @@ export function useImageComments(imageId, refreshKey = 0) {
         name: name.trim() || 'Anonymous',
         text: text.trim(),
       })
-      await refresh()
+      if (result?.comment) {
+        setComments((prev) => {
+          const exists = prev.some((c) => c.id === result.comment.id)
+          if (exists) return prev
+          return [result.comment, ...prev]
+        })
+        loadedOnce.current = true
+        setError('')
+      }
+      refresh().catch(() => {})
       return result
     },
     [imageId, refresh],

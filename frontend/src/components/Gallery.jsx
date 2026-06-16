@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Section from './Section'
 import GalleryImage from './GalleryImage'
 import ImageComments from './ImageComments'
@@ -11,13 +11,16 @@ export default function Gallery() {
   const [items, setItems] = useState(FALLBACK)
   const [active, setActive] = useState(null)
   const [commentsRefreshKey, setCommentsRefreshKey] = useState(0)
-  const loadGallery = () => {
+  const galleryLoaded = useRef(false)
+
+  const loadGallery = useCallback(() => {
     const fallbackById = Object.fromEntries(FALLBACK.map((item) => [item.id, item.fallback]))
 
-    api
+    return api
       .getGallery()
       .then((data) => {
         if (data?.length) {
+          galleryLoaded.current = true
           setItems(
             data.map((item) => ({
               ...item,
@@ -26,15 +29,18 @@ export default function Gallery() {
           )
         }
       })
-      .catch(() => setItems(FALLBACK))
-  }
+      .catch(() => {
+        if (!galleryLoaded.current) {
+          setItems(FALLBACK)
+        }
+      })
+  }, [])
 
   useEffect(() => {
     loadGallery()
-  }, [])
+  }, [loadGallery])
 
-  const refreshCounts = () => {
-    loadGallery()
+  const refreshComments = () => {
     setCommentsRefreshKey((k) => k + 1)
   }
 
@@ -110,7 +116,7 @@ export default function Gallery() {
               imageId={entry.id}
               compact
               refreshKey={commentsRefreshKey}
-              onPosted={refreshCounts}
+              onPosted={refreshComments}
             />
           </li>
         ))}
@@ -154,7 +160,7 @@ export default function Gallery() {
               <ImageComments
                 imageId={item.id}
                 refreshKey={commentsRefreshKey}
-                onPosted={refreshCounts}
+                onPosted={refreshComments}
               />
             </div>
             <button type="button" className="lightbox__nav lightbox__nav--next" onClick={showNext} aria-label={t('gallery.next')}>
