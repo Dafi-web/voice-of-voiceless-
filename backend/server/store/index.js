@@ -1,5 +1,7 @@
 import * as sqlite from './store-sqlite.js'
 import * as mongo from './store-mongo.js'
+import { dbPath } from '../db.js'
+import { migrateSqliteToMongoIfNeeded } from './migrate-sqlite-to-mongo.js'
 
 function useMongo() {
   return Boolean(process.env.MONGODB_URI?.trim())
@@ -17,6 +19,7 @@ export async function initStore() {
   if (mongoConfigured) {
     try {
       await mongo.init()
+      await migrateSqliteToMongoIfNeeded(dbPath)
       impl = mongo
       storeBackend = mongo.name
       console.log(`Database: ${impl.name}`)

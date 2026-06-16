@@ -70,16 +70,22 @@ function rowToGallery(row) {
 }
 
 app.get('/api/health', (_req, res) => {
+  const usingMongo = storeBackend === 'mongodb'
   res.json({
     ok: true,
     service: 'beyond-silence-api',
     database: storeBackend,
     mongoConfigured,
-    mongoConnected: storeBackend === 'mongodb',
+    mongoConnected: usingMongo,
     mongoError: mongoError || undefined,
     dataDir,
     dbPath: storeBackend === 'sqlite' ? dbPath : undefined,
-    persistentStorage: storeBackend === 'mongodb' || Boolean(process.env.DATA_DIR),
+    persistentStorage: usingMongo || Boolean(process.env.DATA_DIR),
+    storageHint: usingMongo
+      ? 'Data is stored in MongoDB Atlas (database: beyond-silence).'
+      : mongoConfigured
+        ? `MongoDB connection failed — using SQLite at ${dbPath}. Fix MONGODB_URI on Render.`
+        : `MONGODB_URI is not set on Render — data is saved to SQLite only (${dbPath}), not MongoDB Atlas.`,
   })
 })
 
