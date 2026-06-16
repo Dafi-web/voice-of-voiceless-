@@ -9,6 +9,7 @@ import { dbPath } from './db.js'
 import { randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 import { store, storeBackend, mongoConfigured, mongoError } from './store/index.js'
+import { mongoEnvVarName } from './store/mongo-env.js'
 
 ensureDirs()
 
@@ -84,8 +85,9 @@ app.get('/api/health', (_req, res) => {
     storageHint: usingMongo
       ? 'Data is stored in MongoDB Atlas (database: beyond-silence).'
       : mongoConfigured
-        ? `MongoDB connection failed — using SQLite at ${dbPath}. Fix MONGODB_URI on Render.`
-        : `MONGODB_URI is not set on Render — data is saved to SQLite only (${dbPath}), not MongoDB Atlas.`,
+        ? `MongoDB connection failed — using SQLite at ${dbPath}. Check your connection string on Render.`
+        : `Set MONGODB_URI or MONGO_URL on Render — data is saved to SQLite only (${dbPath}), not MongoDB Atlas.`,
+    mongoEnvVar: mongoEnvVarName(),
   })
 })
 

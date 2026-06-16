@@ -3,8 +3,10 @@ import * as mongo from './store-mongo.js'
 import { dbPath } from '../db.js'
 import { migrateSqliteToMongoIfNeeded } from './migrate-sqlite-to-mongo.js'
 
+import { getMongoUri } from './mongo-env.js'
+
 function useMongo() {
-  return Boolean(process.env.MONGODB_URI?.trim())
+  return Boolean(getMongoUri())
 }
 
 let impl = sqlite

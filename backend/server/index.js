@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
+const { getMongoUri } = await import('./store/mongo-env.js')
 const { initStore, storeBackend } = await import('./store/index.js')
 const { seedGalleryIfEmpty } = await import('./seed.js')
 const { default: app } = await import('./app.js')
@@ -18,9 +19,9 @@ try {
   await initStore()
   if (process.env.NODE_ENV === 'production' && storeBackend === 'sqlite') {
     console.log(`SQLite data: ${dbPath}`)
-    if (!process.env.MONGODB_URI?.trim()) {
+    if (!getMongoUri()) {
       console.warn(
-        'WARNING: MONGODB_URI is not set. Set it on Render for permanent storage, or attach a persistent disk to DATA_DIR.',
+        'WARNING: MONGODB_URI / MONGO_URL is not set. Set it on Render for permanent storage, or attach a persistent disk to DATA_DIR.',
       )
     }
     try {
