@@ -48,7 +48,10 @@ export async function setSetting(key, value) {
 }
 
 export async function listGalleryPublished() {
-  return col('gallery').find({ published: 1 }).sort({ created_at: -1 }).toArray()
+  return col('gallery')
+    .find({ $or: [{ published: 1 }, { published: true }] })
+    .sort({ created_at: -1 })
+    .toArray()
 }
 
 export async function listGalleryAll() {

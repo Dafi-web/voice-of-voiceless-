@@ -15,7 +15,6 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
   const { comments, addComment, loading, error, refresh } = useImageComments(imageId, refreshKey)
   const [name, setName] = useState('')
   const [text, setText] = useState('')
-  const [expanded, setExpanded] = useState(!compact)
   const [successMsg, setSuccessMsg] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -38,28 +37,8 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
     }
   }
 
-  if (compact && !expanded) {
-    const label =
-      comments.length === 0
-        ? t('comments.add')
-        : comments.length === 1
-          ? t('comments.count', { n: comments.length })
-          : t('comments.countPlural', { n: comments.length })
-    return (
-      <button type="button" className="comments__toggle" onClick={() => setExpanded(true)}>
-        {label}
-      </button>
-    )
-  }
-
   return (
     <div className={`comments ${compact ? 'comments--compact' : ''}`}>
-      {compact && (
-        <button type="button" className="comments__collapse" onClick={() => setExpanded(false)}>
-          {t('comments.hide')}
-        </button>
-      )}
-
       <h4 className="comments__heading">
         {t('comments.heading')} {comments.length > 0 && `(${comments.length})`}
       </h4>

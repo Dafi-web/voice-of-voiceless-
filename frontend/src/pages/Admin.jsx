@@ -240,6 +240,7 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
   const [credit, setCredit] = useState('')
   const [link, setLink] = useState('')
   const [file, setFile] = useState(null)
+  const [publishPublic, setPublishPublic] = useState(true)
   const [uploading, setUploading] = useState(false)
 
   const handleUpload = async (e) => {
@@ -252,13 +253,13 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
       fd.append('caption', caption)
       fd.append('credit', credit)
       fd.append('link', link)
-      fd.append('published', 'true')
+      fd.append('published', publishPublic ? 'true' : 'false')
       await api.postGallery(fd)
       setCaption('')
       setCredit('')
       setLink('')
       setFile(null)
-      onNotice('Uploaded successfully')
+      onNotice(publishPublic ? 'Published on public gallery' : 'Saved as hidden — click Publish when ready')
       await onRefresh()
     } catch (err) {
       onNotice(err.message)
@@ -304,8 +305,16 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
           Link
           <input value={link} onChange={(e) => setLink(e.target.value)} type="url" />
         </label>
+        <label className="checkbox admin-checkbox">
+          <input
+            type="checkbox"
+            checked={publishPublic}
+            onChange={(e) => setPublishPublic(e.target.checked)}
+          />
+          <span>Visible on public gallery (uncheck to save as hidden draft)</span>
+        </label>
         <button type="submit" className="btn btn--primary" disabled={uploading}>
-          {uploading ? 'Uploading…' : 'Publish to gallery'}
+          {uploading ? 'Uploading…' : publishPublic ? 'Publish to gallery' : 'Save as hidden'}
         </button>
       </form>
 
@@ -494,9 +503,74 @@ function AdminComments({ comments, gallery, onRefresh, onNotice }) {
   )
 }
 
-function MessageBody({ body }) {
+function parseUploadPaths(body) {
+  if (!body) return []
+  return body.split('\n').map((l) => l.trim()).filter((line) => /^\/uploads\/.+/.test(line))
+}
+
+function isVideoPath(src) {
+  return /\.(mp4|webm|mov|ogg)$/i.test(src)
+}
+
+function PublishFileToGallery({ src, defaultCaption, onNotice, onRefresh }) {
+  const [caption, setCaption] = useState(defaultCaption || '')
+  const [publishing, setPublishing] = useState(false)
+
+  const publish = async (makePublic) => {
+    if (!caption.trim()) {
+      onNotice('Add a caption before publishing')
+      return
+    }
+    setPublishing(true)
+    try {
+      await api.publishToGallery({
+        src,
+        caption: caption.trim(),
+        published: makePublic,
+      })
+      onNotice(makePublic ? 'Now visible on public gallery' : 'Saved to gallery as hidden')
+      await onRefresh()
+    } catch (err) {
+      onNotice(err.message || 'Could not publish')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  return (
+    <div className="admin-publish-file">
+      {isVideoPath(src) ? (
+        <video src={mediaUrl(src)} className="admin-publish-file__media" controls muted />
+      ) : (
+        <img src={mediaUrl(src)} alt="" className="admin-publish-file__media" />
+      )}
+      <label>
+        Gallery caption
+        <input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} />
+      </label>
+      <div className="admin-card__actions">
+        <button
+          type="button"
+          className="btn btn--primary btn--sm"
+          disabled={publishing}
+          onClick={() => publish(true)}
+        >
+          {publishing ? 'Publishing…' : 'Publish publicly'}
+        </button>
+        <button type="button" className="btn btn--sm" disabled={publishing} onClick={() => publish(false)}>
+          Save hidden
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function MessageBody({ body, message, onNotice, onRefresh }) {
   if (!body) return null
   const lines = body.split('\n')
+  const uploadPaths = parseUploadPaths(body)
+  const showPublish = message?.type === 'evidence' && uploadPaths.length > 0 && onNotice && onRefresh
+
   return (
     <div className="admin-card__body">
       {lines.map((line, i) => {
@@ -504,12 +578,20 @@ function MessageBody({ body }) {
         if (uploadMatch) {
           const href = mediaUrl(uploadMatch[1])
           const name = uploadMatch[1].split('/').pop()
+          const src = uploadMatch[1]
           return (
-            <p key={`${i}-${line}`}>
-              <a href={href} target="_blank" rel="noopener noreferrer">
-                {name}
-              </a>
-            </p>
+            <div key={`${i}-${line}`}>
+              {isVideoPath(src) ? (
+                <video src={href} className="admin-msg-media" controls muted />
+              ) : (
+                <img src={href} alt={name} className="admin-msg-media" />
+              )}
+              <p>
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                  {name}
+                </a>
+              </p>
+            </div>
           )
         }
         if (line.startsWith('Uploaded files:') || line.startsWith('Notes about files:')) {
@@ -521,6 +603,16 @@ function MessageBody({ body }) {
         }
         return line ? <p key={`${i}-${line}`}>{line}</p> : <br key={`${i}-br`} />
       })}
+      {showPublish &&
+        uploadPaths.map((src) => (
+          <PublishFileToGallery
+            key={src}
+            src={src}
+            defaultCaption={message.subject?.replace(/^Evidence submission:\s*/i, '') || ''}
+            onNotice={onNotice}
+            onRefresh={onRefresh}
+          />
+        ))}
     </div>
   )
 }
@@ -557,7 +649,7 @@ function AdminMessages({ messages, onRefresh, onNotice }) {
               <p className="admin-card__meta">
                 <a href={`mailto:${m.email}`}>{m.email}</a> · {m.subject}
               </p>
-              <MessageBody body={m.body} />
+              <MessageBody body={m.body} message={m} onNotice={onNotice} onRefresh={onRefresh} />
               <time>{new Date(m.created_at).toLocaleString()}</time>
               <div className="admin-card__actions">
                 {m.status === 'pending' && (

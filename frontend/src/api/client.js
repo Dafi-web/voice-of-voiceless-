@@ -116,6 +116,8 @@ export const api = {
   getGallery: () => request('/api/gallery').then(asArray),
   getGalleryAll: () => request('/api/gallery/all').then(asArray),
   postGallery: (formData) => request('/api/gallery', { method: 'POST', body: formData }),
+  publishToGallery: (body) =>
+    request('/api/admin/gallery/publish', { method: 'POST', body: JSON.stringify(body) }),
   patchGallery: (id, body) =>
     request(`/api/gallery/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteGallery: (id) => request(`/api/gallery/${id}`, { method: 'DELETE' }),

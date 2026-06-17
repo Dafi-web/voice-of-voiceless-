@@ -172,6 +172,39 @@ app.delete('/api/gallery/:id', authMiddleware, async (req, res) => {
   res.json({ ok: true })
 })
 
+app.post('/api/admin/gallery/publish', authMiddleware, async (req, res) => {
+  try {
+    const { src, caption, credit, link, published } = req.body
+    if (!src?.startsWith('/uploads/')) {
+      return res.status(400).json({ error: 'File path must be an uploaded file (/uploads/...)' })
+    }
+    if (!caption?.trim()) {
+      return res.status(400).json({ error: 'Caption is required' })
+    }
+
+    const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(src) || req.body.type === 'video'
+    const id = randomUUID()
+    const isPublic = published !== false && published !== 'false'
+
+    await store.insertGallery({
+      id,
+      type: isVideo ? 'video' : 'image',
+      src,
+      caption: caption.trim(),
+      credit: (credit || '').trim(),
+      link: (link || '').trim(),
+      is_article: 0,
+      published: isPublic ? 1 : 0,
+      created_at: new Date().toISOString(),
+    })
+
+    const row = await store.getGalleryById(id)
+    res.status(201).json(rowToGallery(row))
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not publish to gallery' })
+  }
+})
+
 app.get('/api/comments/:galleryId', async (req, res) => {
   const rows = await store.listCommentsApproved(req.params.galleryId)
   res.json(
