@@ -38,6 +38,24 @@ Root **`postinstall`** installs `frontend/` and `backend/` dependencies and, on 
 | `NODE_ENV` | `production` |
 | `DATA_DIR` | `/opt/render/project/src/backend/data` |
 | `UPLOADS_DIR` | `/opt/render/project/src/backend/data/uploads` |
+| `CLOUDINARY_URL` | *(recommended)* Cloudinary API env string — gives uploads permanent public URLs |
+| `GCS_BUCKET` | *(alternative)* Google Cloud Storage bucket name |
+| `GCS_CREDENTIALS` | *(with GCS)* full JSON service account key as one line |
+
+### Public gallery uploads (important)
+
+Gallery **metadata** is stored in MongoDB, but **image/video files** must live somewhere public. Without cloud storage, files are saved on Render disk (`/uploads/...`). If those files are lost (redeploy, disk issue), the gallery shows broken images even though admin posts appear in the database.
+
+**Recommended:** set `CLOUDINARY_URL` on Render (free tier at [cloudinary.com](https://cloudinary.com)):
+
+1. Sign up → Dashboard → copy **API environment variable**
+2. Render → Environment → add `CLOUDINARY_URL=cloudinary://key:secret@cloud_name`
+3. Redeploy Render
+4. Re-upload any gallery items that still show broken images
+
+**Alternative — Google Cloud Storage:** set `GCS_BUCKET`, `GCS_PROJECT_ID`, and `GCS_CREDENTIALS` (service account JSON). The bucket must allow public read (`allUsers` → Storage Object Viewer).
+
+Check `/api/health` after deploy — `mediaStorage` should be `cloudinary` or `gcs`, not `local`.
 
 ### Persistent disk
 

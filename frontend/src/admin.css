@@ -62,6 +62,16 @@
   margin: 0;
 }
 
+.admin-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: #4a443c;
+}
+
+.admin-hint--warn {
+  color: #9b1c31;
+}
+
 .admin-back {
   display: inline-block;
   margin-top: 1.25rem;

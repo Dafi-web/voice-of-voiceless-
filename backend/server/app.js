@@ -10,6 +10,13 @@ import { randomUUID } from './seed.js'
 import { verifyPassword, signToken, authMiddleware, changePassword } from './auth.js'
 import { store, storeBackend, mongoConfigured, mongoError } from './store/index.js'
 import { mongoEnvVarName } from './store/mongo-env.js'
+import {
+  isCloudStorageEnabled,
+  cloudStorageBackend,
+  cloudStorageHint,
+  saveUploadedFile,
+  localUploadUrl,
+} from './storage/media-cloud.js'
 
 ensureDirs()
 
@@ -19,15 +26,26 @@ app.use(cors(createCorsOptions()))
 app.use(express.json())
 app.use('/uploads', express.static(uploadsDir))
 
-const storage = multer.diskStorage({
+const diskStorage = multer.diskStorage({
   destination: uploadsDir,
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname) || '.bin'
     cb(null, `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`)
   },
 })
+
+const uploadStorage = isCloudStorageEnabled() ? multer.memoryStorage() : diskStorage
+
+async function mediaSrcFromFile(file) {
+  if (!file) return ''
+  if (isCloudStorageEnabled()) {
+    return saveUploadedFile(file)
+  }
+  return localUploadUrl(file.filename)
+}
+
 const upload = multer({
-  storage,
+  storage: uploadStorage,
   limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ok =
@@ -39,7 +57,7 @@ const upload = multer({
 })
 
 const evidenceUpload = multer({
-  storage,
+  storage: uploadStorage,
   limits: { fileSize: 50 * 1024 * 1024, files: 5 },
   fileFilter: (_req, file, cb) => {
     const ok =
@@ -82,6 +100,8 @@ app.get('/api/health', (_req, res) => {
     dataDir,
     dbPath: storeBackend === 'sqlite' ? dbPath : undefined,
     persistentStorage: usingMongo || Boolean(process.env.DATA_DIR),
+    mediaStorage: cloudStorageBackend(),
+    mediaStorageHint: cloudStorageHint(),
     storageHint: usingMongo
       ? 'Data is stored in MongoDB Atlas (database: beyond-silence).'
       : mongoConfigured
@@ -130,7 +150,7 @@ app.post('/api/gallery', authMiddleware, upload.single('file'), async (req, res)
 
     if (req.file) {
       const isVideo = req.file.mimetype.startsWith('video/')
-      src = `/uploads/${req.file.filename}`
+      src = await mediaSrcFromFile(req.file)
       if (!type && isVideo) req.body.type = 'video'
     }
 
@@ -175,8 +195,10 @@ app.delete('/api/gallery/:id', authMiddleware, async (req, res) => {
 app.post('/api/admin/gallery/publish', authMiddleware, async (req, res) => {
   try {
     const { src, caption, credit, link, published } = req.body
-    if (!src?.startsWith('/uploads/')) {
-      return res.status(400).json({ error: 'File path must be an uploaded file (/uploads/...)' })
+    const isLocalUpload = src?.startsWith('/uploads/')
+    const isCloudUrl = /^https?:\/\//i.test(src || '')
+    if (!isLocalUpload && !isCloudUrl) {
+      return res.status(400).json({ error: 'File path must be an uploaded file or public URL' })
     }
     if (!caption?.trim()) {
       return res.status(400).json({ error: 'Caption is required' })
@@ -336,7 +358,7 @@ app.post('/api/evidence', (req, res, next) => {
       return res.status(400).json({ error: 'Description is required' })
     }
 
-    const uploaded = (req.files || []).map((f) => `/uploads/${f.filename}`)
+    const uploaded = await Promise.all((req.files || []).map((f) => mediaSrcFromFile(f)))
     const bodyParts = [
       description,
       fileNotes && `Notes about files:\n${fileNotes}`,

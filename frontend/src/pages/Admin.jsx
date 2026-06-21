@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { api, setToken, mediaUrl } from '../api/client'
+import { uploadToCloudinary, isCloudinaryUploadEnabled } from '../api/cloudinary'
 import '../admin.css'
 
 const TABS = [
@@ -245,12 +246,18 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
 
   const handleUpload = async (e) => {
     e.preventDefault()
-    if (!file && !caption) return
+    if (!file || !caption.trim()) {
+      onNotice('Choose an image or video and add a caption.')
+      return
+    }
     setUploading(true)
     try {
+      const publicUrl = await uploadToCloudinary(file)
+
       const fd = new FormData()
-      if (file) fd.append('file', file)
-      fd.append('caption', caption)
+      fd.append('src', publicUrl)
+      fd.append('type', file.type.startsWith('video/') ? 'video' : 'image')
+      fd.append('caption', caption.trim())
       fd.append('credit', credit)
       fd.append('link', link)
       fd.append('published', publishPublic ? 'true' : 'false')
@@ -313,9 +320,14 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
           />
           <span>Visible on public gallery (uncheck to save as hidden draft)</span>
         </label>
-        <button type="submit" className="btn btn--primary" disabled={uploading}>
+        <button type="submit" className="btn btn--primary" disabled={uploading || !file}>
           {uploading ? 'Uploading…' : publishPublic ? 'Publish to gallery' : 'Save as hidden'}
         </button>
+        {!isCloudinaryUploadEnabled() && (
+          <p className="admin-hint admin-hint--warn">
+            Cloudinary env vars missing — uploads may not appear on the public site.
+          </p>
+        )}
       </form>
 
       <h2>All gallery items ({items.length})</h2>
