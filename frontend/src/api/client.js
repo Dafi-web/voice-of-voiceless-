@@ -14,15 +14,32 @@ export function getApiBase() {
 
 const API_BASE = getApiBase()
 
-export function mediaUrl(src) {
+function resolveMediaPath(src) {
   if (!src) return ''
   if (/^https?:\/\//i.test(src)) return src
   const path = src.startsWith('/') ? src : `/${src}`
-  // Bundled images in frontend/public/gallery — served by Vercel/static host, not Render
   if (path.startsWith('/gallery/') || path.startsWith('/founder/')) return path
-  // User uploads from admin are stored on the API server
   if (path.startsWith('/uploads/') && API_BASE) return `${API_BASE}${path}`
   return API_BASE ? `${API_BASE}${path}` : path
+}
+
+function applyCloudinaryTransform(url, variant) {
+  if (!url.includes('res.cloudinary.com') || variant === 'full') return url
+
+  const isVideo = url.includes('/video/upload/')
+  const transforms = {
+    thumb: isVideo ? 'so_0,w_480,h_360,c_fill,q_auto,f_jpg' : 'w_480,h_360,c_fill,q_auto,f_auto',
+    lightbox: isVideo ? null : 'w_1200,q_auto,f_auto',
+  }
+  const transform = transforms[variant]
+  if (!transform) return url
+
+  return url.replace(/\/upload\//, `/upload/${transform}/`)
+}
+
+/** @param {'thumb'|'lightbox'|'full'} [variant] */
+export function mediaUrl(src, variant = 'full') {
+  return applyCloudinaryTransform(resolveMediaPath(src), variant)
 }
 
 const TOKEN_KEY = 'admin_token'
@@ -124,6 +141,7 @@ export const api = {
 
   getComments: (galleryId) =>
     request(`/api/comments/${encodeURIComponent(galleryId)}`).then(asArray),
+  getCommentsBatch: () => request('/api/comments/public'),
   postComment: (body) => request('/api/comments', { method: 'POST', body: JSON.stringify(body) }),
   postAdminComment: (body) =>
     request('/api/admin/comments', { method: 'POST', body: JSON.stringify(body) }),

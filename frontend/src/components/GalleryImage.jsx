@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function GalleryImage({ src, fallback, alt, onClick }) {
   const [imgSrc, setImgSrc] = useState(src)
+
+  useEffect(() => {
+    setImgSrc(src)
+  }, [src])
 
   return (
     <img
@@ -9,6 +13,7 @@ export default function GalleryImage({ src, fallback, alt, onClick }) {
       alt={alt}
       className="gallery__img"
       loading="lazy"
+      decoding="async"
       referrerPolicy="no-referrer"
       onClick={onClick}
       onError={() => {

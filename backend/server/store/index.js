@@ -56,6 +56,7 @@ export const store = {
   updateGallery: (...a) => call(impl.updateGallery, ...a),
   deleteGallery: (...a) => call(impl.deleteGallery, ...a),
   listCommentsApproved: (...a) => call(impl.listCommentsApproved, ...a),
+  listCommentsApprovedAll: (...a) => call(impl.listCommentsApprovedAll, ...a),
   listCommentsAll: (...a) => call(impl.listCommentsAll, ...a),
   insertComment: (...a) => call(impl.insertComment, ...a),
   updateCommentStatus: (...a) => call(impl.updateCommentStatus, ...a),

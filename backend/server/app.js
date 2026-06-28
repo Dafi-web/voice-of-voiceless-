@@ -227,6 +227,23 @@ app.post('/api/admin/gallery/publish', authMiddleware, async (req, res) => {
   }
 })
 
+app.get('/api/comments/public', async (_req, res) => {
+  const rows = await store.listCommentsApprovedAll()
+  const grouped = {}
+  for (const r of rows) {
+    const entry = {
+      id: r.id,
+      name: r.name,
+      text: r.text,
+      date: r.created_at,
+    }
+    if (!grouped[r.gallery_id]) grouped[r.gallery_id] = []
+    grouped[r.gallery_id].push(entry)
+  }
+  res.set('Cache-Control', 'public, max-age=60')
+  res.json(grouped)
+})
+
 app.get('/api/comments/:galleryId', async (req, res) => {
   const rows = await store.listCommentsApproved(req.params.galleryId)
   res.json(

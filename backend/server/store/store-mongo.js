@@ -89,6 +89,10 @@ export async function listCommentsApproved(galleryId) {
     .toArray()
 }
 
+export async function listCommentsApprovedAll() {
+  return col('comments').find({ status: 'approved' }).sort({ created_at: -1 }).toArray()
+}
+
 export async function listCommentsAll() {
   const comments = await col('comments').find().sort({ created_at: -1 }).toArray()
   const galleryIds = [...new Set(comments.map((c) => c.gallery_id))]

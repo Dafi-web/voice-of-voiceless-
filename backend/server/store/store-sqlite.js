@@ -78,6 +78,12 @@ export function listCommentsApproved(galleryId) {
     .all(galleryId)
 }
 
+export function listCommentsApprovedAll() {
+  return db
+    .prepare(`SELECT * FROM comments WHERE status = 'approved' ORDER BY created_at DESC`)
+    .all()
+}
+
 export function listCommentsAll() {
   return db
     .prepare(

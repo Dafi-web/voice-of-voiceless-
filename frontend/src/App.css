@@ -1420,6 +1420,10 @@
   margin: 0 0 0.75rem;
 }
 
+.comments__empty--loading {
+  opacity: 0.65;
+}
+
 .comments__form {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useImageComments } from '../hooks/useImageComments'
+import { api } from '../api/client'
 import { useLanguage } from '../i18n/LanguageContext'
 
 function formatDate(iso) {
@@ -10,9 +10,15 @@ function formatDate(iso) {
   })
 }
 
-export default function ImageComments({ imageId, compact = false, onPosted, refreshKey = 0 }) {
+export default function ImageComments({
+  imageId,
+  compact = false,
+  onPosted,
+  comments = [],
+  commentsLoading = false,
+  onCommentAdded,
+}) {
   const { t } = useLanguage()
-  const { comments, addComment, loading, error, refresh } = useImageComments(imageId, refreshKey)
   const [name, setName] = useState('')
   const [text, setText] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -26,7 +32,14 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
     setSuccessMsg('')
     setSubmitting(true)
     try {
-      const result = await addComment(name, text)
+      const result = await api.postComment({
+        galleryId: imageId,
+        name: name.trim() || 'Anonymous',
+        text: text.trim(),
+      })
+      if (result?.comment) {
+        onCommentAdded?.(imageId, result.comment)
+      }
       setText('')
       setSuccessMsg(result.message || t('comments.posted'))
       onPosted?.()
@@ -51,17 +64,8 @@ export default function ImageComments({ imageId, compact = false, onPosted, refr
 
       {submitError && <p className="comments__error">{submitError}</p>}
 
-      {error && (
-        <p className="comments__error">
-          {error}{' '}
-          <button type="button" className="comments__retry" onClick={refresh}>
-            {t('comments.retry')}
-          </button>
-        </p>
-      )}
-
-      {loading ? (
-        <p className="comments__empty">{t('comments.loading')}</p>
+      {commentsLoading ? (
+        <p className="comments__empty comments__empty--loading">{t('comments.loading')}</p>
       ) : comments.length > 0 ? (
         <ul className="comments__list">
           {comments.map(({ id, name: author, text: body, date }) => (

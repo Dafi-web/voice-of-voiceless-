@@ -4,6 +4,7 @@ import GalleryImage from './GalleryImage'
 import ImageComments from './ImageComments'
 import { useLanguage } from '../i18n/LanguageContext'
 import { api, mediaUrl } from '../api/client'
+import { useGalleryCommentsBatch } from '../hooks/useGalleryCommentsBatch'
 import { GALLERY_ITEMS as FALLBACK } from '../data/gallery'
 
 export default function Gallery() {
@@ -12,6 +13,7 @@ export default function Gallery() {
   const [active, setActive] = useState(null)
   const [commentsRefreshKey, setCommentsRefreshKey] = useState(0)
   const galleryLoaded = useRef(false)
+  const { byGallery, loading: commentsLoading, addComment } = useGalleryCommentsBatch(commentsRefreshKey)
 
   const loadGallery = useCallback(() => {
     const fallbackById = Object.fromEntries(FALLBACK.map((item) => [item.id, item.fallback]))
@@ -87,10 +89,14 @@ export default function Gallery() {
               aria-label={`View: ${entry.caption}`}
             >
               {entry.type === 'video' ? (
-                <video src={mediaUrl(entry.src)} className="gallery__img" muted playsInline />
+                <GalleryImage
+                  src={mediaUrl(entry.src, 'thumb')}
+                  fallback={entry.fallback}
+                  alt={entry.caption}
+                />
               ) : (
                 <GalleryImage
-                  src={mediaUrl(entry.src)}
+                  src={mediaUrl(entry.src, 'thumb')}
                   fallback={entry.fallback}
                   alt={entry.caption}
                 />
@@ -115,7 +121,9 @@ export default function Gallery() {
             <ImageComments
               imageId={entry.id}
               compact
-              refreshKey={commentsRefreshKey}
+              comments={byGallery[entry.id] || []}
+              commentsLoading={commentsLoading}
+              onCommentAdded={addComment}
               onPosted={refreshComments}
             />
           </li>
@@ -139,10 +147,17 @@ export default function Gallery() {
             </button>
             <div className="lightbox__media">
               {item.type === 'video' ? (
-                <video src={mediaUrl(item.src)} className="gallery__img" controls autoPlay />
+                <video
+                  src={mediaUrl(item.src, 'full')}
+                  className="gallery__img"
+                  controls
+                  autoPlay
+                  preload="metadata"
+                  playsInline
+                />
               ) : (
                 <GalleryImage
-                  src={mediaUrl(item.src)}
+                  src={mediaUrl(item.src, 'lightbox')}
                   fallback={item.fallback}
                   alt={item.caption}
                   onClick={() => {}}
@@ -159,7 +174,9 @@ export default function Gallery() {
               </div>
               <ImageComments
                 imageId={item.id}
-                refreshKey={commentsRefreshKey}
+                comments={byGallery[item.id] || []}
+                commentsLoading={commentsLoading}
+                onCommentAdded={addComment}
                 onPosted={refreshComments}
               />
             </div>
