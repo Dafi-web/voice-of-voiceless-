@@ -302,7 +302,13 @@ function AdminGallery({ gallery, onRefresh, onNotice }) {
         </label>
         <label>
           Caption *
-          <input value={caption} onChange={(e) => setCaption(e.target.value)} required />
+          <textarea
+            className="admin-caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            rows={6}
+            required
+          />
         </label>
         <label>
           Credit
@@ -558,7 +564,13 @@ function PublishFileToGallery({ src, defaultCaption, onNotice, onRefresh }) {
       )}
       <label>
         Gallery caption
-        <input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} />
+        <textarea
+          className="admin-caption"
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          rows={5}
+          maxLength={500}
+        />
       </label>
       <div className="admin-card__actions">
         <button

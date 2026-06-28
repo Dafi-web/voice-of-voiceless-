@@ -234,6 +234,15 @@
   border-radius: 8px;
 }
 
+.admin-caption {
+  width: 100%;
+  min-height: 8rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  resize: vertical;
+  font-family: inherit;
+}
+
 .admin-gallery-list {
   list-style: none;
   margin: 0;
@@ -422,11 +431,20 @@
   font-size: 0.9rem;
 }
 
-.admin-publish-file input {
+.admin-publish-file input,
+.admin-publish-file textarea {
   display: block;
   width: 100%;
   margin-top: 0.35rem;
   padding: 0.5rem;
   border: 1px solid #d8d2c8;
   border-radius: 6px;
+}
+
+.admin-publish-file .admin-caption {
+  min-height: 7rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  resize: vertical;
+  font-family: inherit;
 }
